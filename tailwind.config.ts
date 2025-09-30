@@ -50,8 +50,8 @@ export default {
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-orb': 'linear-gradient(135deg, hsl(var(--gradient-purple)), hsl(var(--gradient-pink)), hsl(var(--gradient-orange)))',
-        'gradient-purple': 'linear-gradient(135deg, hsl(var(--gradient-purple)), hsl(275, 80%, 55%))',
+        'gradient-purple': 'linear-gradient(135deg, hsl(var(--gradient-purple-start)), hsl(var(--gradient-purple-end)))',
+        'gradient-orb': 'linear-gradient(135deg, hsl(263, 90%, 65%), hsl(275, 85%, 60%))',
       },
       borderRadius: {
         lg: "var(--radius)",
