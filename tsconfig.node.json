@@ -7,7 +7,7 @@
     ],
     "module": "ESNext",
     "skipLibCheck": true,
-    "moduleResolution": "bundler",
+  "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
@@ -19,6 +19,7 @@
     "noUncheckedSideEffectImports": true
   },
   "include": [
-    "vite.config.ts"
+    "vite.config.ts",
+    "types/**/*.d.ts"
   ]
 }

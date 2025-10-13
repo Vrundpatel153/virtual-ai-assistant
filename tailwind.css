@@ -1,3 +1,4 @@
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -119,9 +120,7 @@
   }
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind directives declared once at the top (base/components/utilities) */
 
 @layer utilities {
   /* Cut a bottom-centered arc from the bottom edge of an element (for the top hero card) */
