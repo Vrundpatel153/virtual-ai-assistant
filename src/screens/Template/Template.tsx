@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../components/ui/card";
 import { MessageSquare, Bot, ChartBar as BarChart3, Sparkles, Zap, Brain, Mic as Mic2 } from "lucide-react";
 import { Navbar } from "../../components/Navbar";
+import ModelCanvas from "../../components/ModelCanvas";
 
 export const Template = (): JSX.Element => {
   const navigate = useNavigate();
@@ -75,9 +76,27 @@ export const Template = (): JSX.Element => {
             </div>
 
             {/* Column 2 - Center (Hero card + 2 cards below) */}
-            <div className="flex flex-col gap-4 md:gap-5">
+            <div className="relative flex flex-col gap-4 md:gap-5">
+              {/* Middle circle 3D canvas (shows through card cutouts) */}
+              <div className="hidden md:block absolute left-1/2 -translate-x-1/2 md:top-[146px] lg:top-[176px] md:w-[280px] md:h-[280px] lg:w-[340px] lg:h-[340px] rounded-full overflow-hidden z-30 [clip-path:circle(50%_at_50%_50%)]">
+                <ModelCanvas
+                  src="/models/base_basic_pbr.glb"
+                  autoRotate={false}
+                  className="absolute inset-0 w-full h-full"
+                  fitMargin={1.0}
+                  viewMargin={1.14}
+                  scale={0.90}
+                  enableZoom={false}
+                  enableRotate={true}
+                  enablePan={false}
+                  offsetYRatio={0}
+                />
+                {/* Subtle ring + glow overlays (non-interactive) */}
+                <div className="pointer-events-none absolute inset-0 rounded-full border border-white/10" />
+                <div className="pointer-events-none absolute inset-[-12%] rounded-full bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15),transparent_60%)]" />
+              </div>
               {/* Hero Card - AI Assistant Hub */}
-              <Card className="bg-gradient-to-br from-[#8b5cf6] via-[#a855f7] to-[#c084fc] border-white/20 rounded-[20px] md:rounded-[28px] h-[280px] md:h-[340px] overflow-hidden relative shadow-[0_20px_60px_rgba(139,92,246,0.6),0_0_80px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_25px_80px_rgba(139,92,246,0.8),0_0_100px_rgba(168,85,247,0.4)] transition-all duration-300">
+              <Card className="bg-gradient-to-br from-[#8b5cf6] via-[#a855f7] to-[#c084fc] border-white/20 rounded-[20px] md:rounded-[28px] h-[280px] md:h-[340px] overflow-hidden relative z-10 shadow-[0_20px_60px_rgba(139,92,246,0.6),0_0_80px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_25px_80px_rgba(139,92,246,0.8),0_0_100px_rgba(168,85,247,0.4)] transition-all duration-300 mask-cut-top-arc [--cut-r:140px] lg:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-y:6px]">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.3),transparent_50%)]" />
                 <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.2)_0%,transparent_60%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.15),transparent_50%)]" />
@@ -95,13 +114,16 @@ export const Template = (): JSX.Element => {
                     Powered by advanced neural networks
                   </div>
                 </CardContent>
+
               </Card>
+
+              {/* No overlay circle needed; arcs are cut via masks above/below */}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
                 {/* Voice Assistant Card */}
                 <Card
                   onClick={() => navigate('/voice')}
-                  className={`${cardBaseClasses} rounded-[20px] md:rounded-[28px] h-[280px] md:h-[359.5px] overflow-hidden relative`}
+                  className={`${cardBaseClasses} rounded-[20px] md:rounded-[28px] h-[280px] md:h-[359.5px] overflow-hidden relative z-10 mask-cut-top-right-arc [--cut-r:140px] lg:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-x:10px] [--cut-offset-y:6px] [pointer-events:auto]`}
                 >
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(120,119,198,0.12),transparent_60%)]" />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(139,92,246,0.04)_0%,transparent_40%)]" />
@@ -126,12 +148,13 @@ export const Template = (): JSX.Element => {
                       </p>
                     </div>
                   </CardContent>
+
                 </Card>
 
                 {/* AI Agents Card */}
                 <Card
                   onClick={() => navigate('/agents')}
-                  className={`${cardBaseClasses} rounded-[20px] md:rounded-[28px] h-[280px] md:h-[359.5px] overflow-hidden relative`}
+                  className={`${cardBaseClasses} rounded-[20px] md:rounded-[28px] h-[280px] md:h-[359.5px] overflow-hidden relative z-10 mask-cut-top-left-arc [--cut-r:140px] lg:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-x:10px] [--cut-offset-y:6px] [pointer-events:auto]`}
                 >
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(120,119,198,0.12),transparent_60%)]" />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(139,92,246,0.04)_0%,transparent_40%)]" />
@@ -154,6 +177,7 @@ export const Template = (): JSX.Element => {
                       </p>
                     </div>
                   </CardContent>
+
                 </Card>
               </div>
             </div>
@@ -239,58 +263,7 @@ export const Template = (): JSX.Element => {
             </div>
           </div>
 
-          {/* Center Circle - AI Neural Network Orb - Hidden on mobile */}
-          <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] lg:w-[340px] h-[280px] lg:h-[340px] pointer-events-none">
-            <div className="w-full h-full backdrop-blur-sm bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 rounded-full border-2 border-[#2d3256]/60 shadow-[0_0_120px_rgba(139,92,246,0.5),inset_0_0_80px_rgba(139,92,246,0.15)] relative overflow-hidden group">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(139,92,246,0.2),transparent_60%)]" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_70%,rgba(168,85,247,0.15),transparent_60%)]" />
-
-              {/* 3D Robot Face - Full Circle Fill */}
-              <div className="absolute inset-0 rounded-full shadow-[inset_0_0_60px_rgba(0,0,0,0.6)] flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-[#0a0b1e] via-[#1a1b3e] to-[#0a0b1e]">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15),transparent_60%)]" />
-
-                {/* Robot Face Image - Maximum Zoom to Fill */}
-                <img
-                  src="/Gemini_Generated_Image_3ub7493ub7493ub7.png"
-                  alt="AI Robot Face"
-                  className="min-w-[200%] min-h-[200%] object-cover rounded-full scale-150"
-                />
-
-                {/* Glowing overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-purple-900/20 rounded-full" />
-
-                {/* Light glare effect */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.1),transparent_40%)] rounded-full" />
-
-                {/* Orbiting particles */}
-                <div className="absolute inset-0 animate-spin" style={{ animationDuration: '15s' }}>
-                  <div className="absolute top-4 left-1/2 w-2 h-2 rounded-full bg-white/40 shadow-[0_0_10px_rgba(255,255,255,0.6)]" />
-                  <div className="absolute bottom-4 right-1/3 w-1.5 h-1.5 rounded-full bg-orange-300/40 shadow-[0_0_8px_rgba(251,146,60,0.6)]" />
-                </div>
-                <div className="absolute inset-0 animate-spin" style={{ animationDuration: '20s', animationDirection: 'reverse' }}>
-                  <div className="absolute top-1/3 right-4 w-1.5 h-1.5 rounded-full bg-purple-300/40 shadow-[0_0_8px_rgba(216,180,254,0.6)]" />
-                  <div className="absolute bottom-1/3 left-4 w-2 h-2 rounded-full bg-blue-300/40 shadow-[0_0_10px_rgba(147,197,253,0.6)]" />
-                </div>
-              </div>
-
-              {/* Circular text */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-25">
-                <svg className="w-full h-full animate-spin" style={{ animationDuration: '30s' }} viewBox="0 0 340 340">
-                  <defs>
-                    <path
-                      id="circlePath"
-                      d="M 170, 170 m -140, 0 a 140,140 0 1,1 280,0 a 140,140 0 1,1 -280,0"
-                    />
-                  </defs>
-                  <text fill="white" fontSize="11" fontFamily="monospace">
-                    <textPath href="#circlePath">
-                      AI • CHAT • VOICE • AGENTS • NEURAL • NETWORKS • POWERED
-                    </textPath>
-                  </text>
-                </svg>
-              </div>
-            </div>
-          </div>
+          {/* Center circle and 3D model temporarily removed for layout adjustments */}
         </div>
       </div>
     </div>

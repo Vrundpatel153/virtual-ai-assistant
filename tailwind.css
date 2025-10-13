@@ -123,6 +123,56 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* Cut a bottom-centered arc from the bottom edge of an element (for the top hero card) */
+  .mask-cut-top-arc {
+    -webkit-mask-image: radial-gradient(
+      circle var(--cut-r) at 50% calc(100% + var(--cut-offset-y, 0px)),
+      transparent calc(var(--cut-r) - var(--cut-pad, 0px)),
+      #000 calc(var(--cut-r) - var(--cut-pad, 0px) + 1px)
+    );
+    mask-image: radial-gradient(
+      circle var(--cut-r) at 50% calc(100% + var(--cut-offset-y, 0px)),
+      transparent calc(var(--cut-r) - var(--cut-pad, 0px)),
+      #000 calc(var(--cut-r) - var(--cut-pad, 0px) + 1px)
+    );
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+
+  /* Cut a quarter arc from the top-right corner (used on the left bottom card) */
+  .mask-cut-top-right-arc {
+    -webkit-mask-image: radial-gradient(
+      circle var(--cut-r) at calc(100% + var(--cut-offset-x, 0px)) calc(0% - var(--cut-offset-y, 0px)),
+      transparent calc(var(--cut-r) - var(--cut-pad, 0px)),
+      #000 calc(var(--cut-r) - var(--cut-pad, 0px) + 1px)
+    );
+    mask-image: radial-gradient(
+      circle var(--cut-r) at calc(100% + var(--cut-offset-x, 0px)) calc(0% - var(--cut-offset-y, 0px)),
+      transparent calc(var(--cut-r) - var(--cut-pad, 0px)),
+      #000 calc(var(--cut-r) - var(--cut-pad, 0px) + 1px)
+    );
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+
+  /* Cut a quarter arc from the top-left corner (used on the right bottom card) */
+  .mask-cut-top-left-arc {
+    -webkit-mask-image: radial-gradient(
+      circle var(--cut-r) at calc(0% - var(--cut-offset-x, 0px)) calc(0% - var(--cut-offset-y, 0px)),
+      transparent calc(var(--cut-r) - var(--cut-pad, 0px)),
+      #000 calc(var(--cut-r) - var(--cut-pad, 0px) + 1px)
+    );
+    mask-image: radial-gradient(
+      circle var(--cut-r) at calc(0% - var(--cut-offset-x, 0px)) calc(0% - var(--cut-offset-y, 0px)),
+      transparent calc(var(--cut-r) - var(--cut-pad, 0px)),
+      #000 calc(var(--cut-r) - var(--cut-pad, 0px) + 1px)
+    );
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
