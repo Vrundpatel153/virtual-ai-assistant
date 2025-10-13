@@ -1,7 +1,6 @@
-import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../components/ui/card";
-import { MessageSquare, Mic, Bot, ChartBar as BarChart3, Sparkles, Zap, Brain, Mic as Mic2 } from "lucide-react";
+import { MessageSquare, Bot, ChartBar as BarChart3, Sparkles, Zap, Brain, Mic as Mic2 } from "lucide-react";
 import { Navbar } from "../../components/Navbar";
 
 export const Template = (): JSX.Element => {

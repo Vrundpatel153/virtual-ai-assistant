@@ -1,4 +1,3 @@
-import React from "react";
 import { Navbar } from "../../components/Navbar";
 import { ThemeToggle } from "../../components/ThemeToggle";
 import { Settings as SettingsIcon, Bell, Lock, Globe, Palette, Zap } from "lucide-react";
