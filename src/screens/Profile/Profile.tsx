@@ -1,4 +1,3 @@
-import React from "react";
 import { Navbar } from "../../components/Navbar";
 import { User, Mail, Calendar, MapPin, Award, TrendingUp, MessageSquare, Mic } from "lucide-react";
 import { Card, CardContent } from "../../components/ui/card";

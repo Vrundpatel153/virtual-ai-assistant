@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { Navbar } from "../../components/Navbar";
 import { Send, Sparkles, User, Bot } from "lucide-react";
 
@@ -11,7 +10,6 @@ interface Message {
 }
 
 export const Chat = (): JSX.Element => {
-  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
