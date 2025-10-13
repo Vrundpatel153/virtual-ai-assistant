@@ -7,6 +7,8 @@ import { Voice } from "./screens/Voice/Voice";
 import { Agents } from "./screens/Agents/Agents";
 import { Settings } from "./screens/Settings/Settings";
 import { Profile } from "./screens/Profile/Profile";
+// @ts-ignore
+import "./index.css";
 
 createRoot(document.getElementById("app") as HTMLElement).render(
   <StrictMode>

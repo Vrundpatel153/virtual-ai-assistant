@@ -13,3 +13,8 @@ declare module "path" {
 declare module "url" {
   export const fileURLToPath: any;
 }
+
+// Allow importing CSS files
+declare module "*.css";
+declare module "*.scss";
+declare module "*.sass";
