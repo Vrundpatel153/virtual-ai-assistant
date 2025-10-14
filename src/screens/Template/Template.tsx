@@ -110,9 +110,7 @@ export const Template = (): JSX.Element => {
                   <h1 className="text-white text-3xl md:text-5xl font-bold leading-tight mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
                     Chat • Voice • Agents
                   </h1>
-                  <div className="text-white/90 text-[10px] md:text-xs tracking-[0.2em] uppercase font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">
-                    Powered by advanced neural networks
-                  </div>
+                  
                 </CardContent>
 
               </Card>
