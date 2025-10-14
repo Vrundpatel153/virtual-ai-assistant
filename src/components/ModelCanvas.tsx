@@ -1,5 +1,5 @@
 import React, { Suspense, useMemo } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { Environment, OrbitControls, useGLTF, Html } from "@react-three/drei";
 import { Box3, Vector3, Group, PerspectiveCamera } from "three";
 
@@ -14,6 +14,10 @@ type ModelCanvasProps = {
   enablePan?: boolean;
   viewMargin?: number; // extra margin when fitting to the viewport (>=1 is looser, <1 tighter)
   offsetYRatio?: number; // shift model down (+) or up (-) by this fraction of its height after centering
+  reactToHover?: boolean; // subtly rotate model in response to mouse hover across the page
+  hoverMaxTiltDeg?: number; // max pitch (x-rotation) in degrees
+  hoverMaxYawDeg?: number; // max yaw (y-rotation) in degrees
+  hoverSmoothing?: number; // interpolation factor per frame (0..1)
 };
 
 const FittedModel = React.forwardRef<Group, { src: string; fit?: number; scale?: number; offsetYRatio?: number }>(({ src, fit = 1.0, scale = 1.0, offsetYRatio = 0 }, ref) => {
@@ -78,6 +82,62 @@ function FitCamera({ targetRef, margin = 1.0 }: { targetRef: React.RefObject<Gro
 
 useGLTF.preload("/models/base_basic_pbr.glb");
 
+function HoverReactor({
+  targetRef,
+  enabled = true,
+  maxTiltDeg = 12,
+  maxYawDeg = 18,
+  smoothing = 0.1,
+}: {
+  targetRef: React.RefObject<Group>;
+  enabled?: boolean;
+  maxTiltDeg?: number;
+  maxYawDeg?: number;
+  smoothing?: number;
+}) {
+  const mouseRef = React.useRef({ x: 0, y: 0 }); // normalized -1..1 (x right positive, y up positive)
+
+  React.useEffect(() => {
+    if (!enabled) return;
+    const onMove = (e: PointerEvent) => {
+      if ((e.pointerType as any) && e.pointerType !== "mouse") return;
+      const vw = window.innerWidth || 1;
+      const vh = window.innerHeight || 1;
+      const nx = (e.clientX / vw) * 2 - 1; // -1 left, +1 right
+      const ny = (e.clientY / vh) * 2 - 1; // -1 top, +1 bottom
+      // we want positive up, so invert ny
+      mouseRef.current.x = nx;
+      mouseRef.current.y = -ny;
+    };
+    const onLeave = () => {
+      mouseRef.current.x = 0;
+      mouseRef.current.y = 0;
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerleave", onLeave);
+    window.addEventListener("blur", onLeave);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("blur", onLeave);
+    };
+  }, [enabled]);
+
+  useFrame(() => {
+    if (!enabled) return;
+    const g = targetRef.current;
+    if (!g) return;
+    const maxTilt = (maxTiltDeg * Math.PI) / 180;
+    const maxYaw = (maxYawDeg * Math.PI) / 180;
+    const targetX = -mouseRef.current.y * maxTilt; // invert so moving mouse up tilts model up
+    const targetY = mouseRef.current.x * maxYaw; // yaw toward mouse horizontally
+    // Smoothly interpolate
+    g.rotation.x += (targetX - g.rotation.x) * smoothing;
+    g.rotation.y += (targetY - g.rotation.y) * smoothing;
+  });
+  return null;
+}
+
 export const ModelCanvas: React.FC<ModelCanvasProps> = ({
   src,
   scale = 1.14,
@@ -89,6 +149,10 @@ export const ModelCanvas: React.FC<ModelCanvasProps> = ({
   enablePan = false,
   viewMargin = 0.96,
   offsetYRatio = 0.18,
+  reactToHover = true,
+  hoverMaxTiltDeg = 14,
+  hoverMaxYawDeg = 22,
+  hoverSmoothing = 0.16,
 }) => {
   // Maintain a circular mask using Tailwind utility classes. The Canvas fills the container.
   const containerClasses = useMemo(
@@ -109,6 +173,15 @@ export const ModelCanvas: React.FC<ModelCanvasProps> = ({
           {/* Manually center and fit model into a unit space, apply Y offset, then fit camera to viewport */}
           <FittedModel ref={contentRef} src={src} fit={fitMargin} scale={scale} offsetYRatio={offsetYRatio} />
           <FitCamera targetRef={contentRef} margin={viewMargin} />
+          {reactToHover && (
+            <HoverReactor
+              targetRef={contentRef}
+              enabled={reactToHover}
+              maxTiltDeg={hoverMaxTiltDeg}
+              maxYawDeg={hoverMaxYawDeg}
+              smoothing={hoverSmoothing}
+            />
+          )}
           <Environment preset="city" />
         </Suspense>
 
