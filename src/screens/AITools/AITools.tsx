@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Navbar } from "../../components/Navbar";
-import { FileText, Upload, Sparkles, Loader2, CheckCircle } from "lucide-react";
+import { FileText, Upload, Sparkles, Loader2, CheckCircle, History, Clock, Trash2 } from "lucide-react";
 import { Card, CardContent } from "../../components/ui/card";
+import { pdfHistoryManager } from "../../lib/historyManager";
 
 interface Tool {
   id: string;
@@ -15,6 +16,12 @@ export const AITools = (): JSX.Element => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [summary, setSummary] = useState<string>("");
+  const [history, setHistory] = useState(() => pdfHistoryManager.getAllRecords());
+  const [showHistory, setShowHistory] = useState(false);
+
+  useEffect(() => {
+    setHistory(pdfHistoryManager.getAllRecords());
+  }, [summary]);
 
   const tools: Tool[] = [
     {
@@ -43,26 +50,43 @@ export const AITools = (): JSX.Element => {
     
     // Simulate AI processing
     setTimeout(() => {
-      setSummary(
-        `Summary of "${selectedFile.name}":\n\nThis is a simulated AI-generated summary. In a real implementation, this would:\n\n1. Extract text from the PDF document\n2. Send it to an AI model (like GPT or Claude)\n3. Return a concise summary of the key points\n\nThe summary would include:\n• Main topics covered\n• Key findings and conclusions\n• Important data points\n• Recommendations or next steps\n\nFor a production version, you would integrate with an AI API service.`
-      );
+      const newSummary = `Summary of "${selectedFile.name}":\n\nThis is a simulated AI-generated summary. In a real implementation, this would:\n\n1. Extract text from the PDF document\n2. Send it to an AI model (like GPT or Claude)\n3. Return a concise summary of the key points\n\nThe summary would include:\n• Main topics covered\n• Key findings and conclusions\n• Important data points\n• Recommendations or next steps\n\nFor a production version, you would integrate with an AI API service.`;
+      setSummary(newSummary);
+      pdfHistoryManager.addRecord(selectedFile.name, newSummary);
       setIsProcessing(false);
     }, 2000);
+  };
+
+  const deleteHistoryRecord = (id: string) => {
+    if (confirm("Delete this PDF summary?")) {
+      pdfHistoryManager.deleteRecord(id);
+      setHistory(pdfHistoryManager.getAllRecords());
+    }
   };
 
   return (
     <div className="bg-[#0a0b1e] w-full min-h-screen flex flex-col">
       <Navbar />
-      <div className="flex-1 pt-20 md:pt-24 pb-6 px-4 md:px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-white text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3">
-              <Sparkles className="w-8 h-8 text-purple-400" />
-              AI Tools
-            </h1>
-            <p className="text-gray-400 text-sm md:text-base">
-              Powerful AI-powered tools for your workflow
-            </p>
+      <div className="flex-1 pt-20 md:pt-24 pb-6 px-4 md:px-6 flex gap-4 max-w-7xl mx-auto w-full">
+        {/* Main Tools Area */}
+        <div className="flex-1 min-w-0">
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-white text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3">
+                <Sparkles className="w-8 h-8 text-purple-400" />
+                AI Tools
+              </h1>
+              <p className="text-gray-400 text-sm md:text-base">
+                Powerful AI-powered tools for your workflow
+              </p>
+            </div>
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl border border-white/10 hover:border-white/20 transition-all duration-300 flex items-center gap-2"
+            >
+              <History className="w-4 h-4" />
+              <span className="hidden md:inline">History</span>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -153,6 +177,53 @@ export const AITools = (): JSX.Element => {
             </CardContent>
           </Card>
         </div>
+
+        {/* History Sidebar */}
+        {showHistory && (
+          <div className="w-full md:w-96 flex-shrink-0">
+            <div className="backdrop-blur-xl bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 border border-white/10 rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] h-full overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-white/10">
+                <h2 className="text-white text-lg font-bold flex items-center gap-2">
+                  <History className="w-5 h-5 text-blue-400" />
+                  PDF History
+                </h2>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                {history.length === 0 ? (
+                  <p className="text-gray-400 text-sm text-center py-8">No PDF summaries yet</p>
+                ) : (
+                  history.map((record) => (
+                    <div
+                      key={record.id}
+                      className="group p-4 rounded-xl bg-[#2a2d4a]/50 border border-white/5 hover:bg-[#2a2d4a] hover:border-white/10 transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                            <p className="text-white text-sm font-medium truncate">{record.fileName}</p>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-gray-400">
+                            <Clock className="w-3 h-3" />
+                            {record.timestamp.toLocaleString()}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => deleteHistoryRecord(record.id)}
+                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded-lg transition-all"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </button>
+                      </div>
+                      <p className="text-gray-300 text-xs line-clamp-3">{record.summary}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
