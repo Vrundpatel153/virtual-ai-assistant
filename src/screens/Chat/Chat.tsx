@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "../../components/Navbar";
-import { Send, Sparkles, User, Bot } from "lucide-react";
+import { Send, Sparkles, User, Bot, Trash2 } from "lucide-react";
 
 interface Message {
   id: string;
@@ -9,16 +9,32 @@ interface Message {
   timestamp: Date;
 }
 
+const CHAT_HISTORY_KEY = 'ai_assistant_chat_history';
+
 export const Chat = (): JSX.Element => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      text: "Hello! I'm your AI assistant. How can I help you today?",
-      sender: "ai",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = localStorage.getItem(CHAT_HISTORY_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return parsed.map((msg: any) => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp)
+      }));
+    }
+    return [
+      {
+        id: "1",
+        text: "Hello! I'm your AI assistant. How can I help you today?",
+        sender: "ai",
+        timestamp: new Date(),
+      },
+    ];
+  });
   const [inputValue, setInputValue] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(messages));
+  }, [messages]);
 
   const handleSend = () => {
     if (!inputValue.trim()) return;
@@ -51,16 +67,38 @@ export const Chat = (): JSX.Element => {
     }
   };
 
+  const clearHistory = () => {
+    if (confirm("Are you sure you want to clear all chat history?")) {
+      const initialMessage: Message = {
+        id: "1",
+        text: "Hello! I'm your AI assistant. How can I help you today?",
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      setMessages([initialMessage]);
+      localStorage.removeItem(CHAT_HISTORY_KEY);
+    }
+  };
+
   return (
     <div className="bg-[#0a0b1e] w-full min-h-screen flex flex-col">
       <Navbar />
       <div className="flex-1 pt-20 md:pt-24 pb-6 px-4 md:px-6 flex flex-col max-w-5xl mx-auto w-full">
-        <div className="mb-6">
-          <h1 className="text-white text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3">
-            <Sparkles className="w-8 h-8 text-purple-400" />
-            Chat Assistant
-          </h1>
-          <p className="text-gray-400 text-sm md:text-base">Have a conversation with your AI assistant</p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-white text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3">
+              <Sparkles className="w-8 h-8 text-purple-400" />
+              Chat Assistant
+            </h1>
+            <p className="text-gray-400 text-sm md:text-base">Have a conversation with your AI assistant</p>
+          </div>
+          <button
+            onClick={clearHistory}
+            className="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-4 py-2 rounded-xl border border-red-500/30 hover:border-red-500/50 transition-all duration-300 flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span className="hidden md:inline">Clear History</span>
+          </button>
         </div>
 
         <div className="flex-1 backdrop-blur-xl bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 border border-white/10 rounded-[20px] md:rounded-[28px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col">

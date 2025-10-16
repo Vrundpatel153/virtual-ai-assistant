@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { MessageSquare, Mic, Zap, Menu, X, Settings, User, Chrome as Home } from "lucide-react";
+import { MessageSquare, Mic, Wrench, Menu, X, Settings, LogOut, Chrome as Home } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { authService } from "../lib/auth";
 
 export const Navbar = (): JSX.Element => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -18,12 +19,19 @@ export const Navbar = (): JSX.Element => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const currentUser = authService.getCurrentUser();
+
   const navLinks = [
     { icon: <Home className="w-4 h-4" />, label: "Home", path: "/" },
     { icon: <MessageSquare className="w-4 h-4" />, label: "Chat", path: "/chat" },
     { icon: <Mic className="w-4 h-4" />, label: "Voice", path: "/voice" },
-    { icon: <Zap className="w-4 h-4" />, label: "Agents", path: "/agents" },
+    { icon: <Wrench className="w-4 h-4" />, label: "AI Tools", path: "/ai-tools" },
   ];
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate("/");
+  };
 
   return (
     <nav
@@ -41,7 +49,7 @@ export const Navbar = (): JSX.Element => {
           >
             <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#a855f7] flex items-center justify-center shadow-lg shadow-purple-500/30 relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <Zap className="w-4 h-4 md:w-5 md:h-5 text-white relative z-10" />
+              <Wrench className="w-4 h-4 md:w-5 md:h-5 text-white relative z-10" />
             </div>
             <div>
               <h1 className="text-white font-bold text-base md:text-xl">AI Assistant</h1>
@@ -63,18 +71,28 @@ export const Navbar = (): JSX.Element => {
 
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
-            <button
-              onClick={() => navigate("/settings")}
-              className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:border-[#3d4266]/70"
-            >
-              <Settings className="w-4 h-4 md:w-5 md:h-5" />
-            </button>
-            <button
-              onClick={() => navigate("/profile")}
-              className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] hover:from-[#6d28d9] hover:to-[#7c3aed] flex items-center justify-center text-white transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105"
-            >
-              <User className="w-4 h-4 md:w-5 md:h-5" />
-            </button>
+            {currentUser && (
+              <>
+                <button
+                  onClick={() => navigate("/settings")}
+                  className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:border-[#3d4266]/70"
+                >
+                  <Settings className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
+                <button
+                  onClick={() => navigate("/profile")}
+                  className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] hover:from-[#6d28d9] hover:to-[#7c3aed] flex items-center justify-center text-white transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105"
+                >
+                  <span className="font-semibold">{currentUser.name.charAt(0).toUpperCase()}</span>
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 flex items-center justify-center text-red-400 hover:text-red-300 transition-all duration-200"
+                >
+                  <LogOut className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
+              </>
+            )}
           </div>
 
           <button
@@ -99,28 +117,42 @@ export const Navbar = (): JSX.Element => {
                 }}
               />
             ))}
-            <div className="flex gap-2 pt-2">
-              <button
-                onClick={() => {
-                  navigate("/settings");
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex-1 h-11 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 flex items-center justify-center gap-2 text-gray-400 hover:text-white transition-all duration-200"
-              >
-                <Settings className="w-4 h-4" />
-                <span className="text-sm font-medium">Settings</span>
-              </button>
-              <button
-                onClick={() => {
-                  navigate("/profile");
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex-1 h-11 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] flex items-center justify-center gap-2 text-white transition-all duration-200 shadow-lg shadow-purple-500/30"
-              >
-                <User className="w-4 h-4" />
-                <span className="text-sm font-medium">Profile</span>
-              </button>
-            </div>
+            {currentUser && (
+              <div className="space-y-2 pt-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      navigate("/settings");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex-1 h-11 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 flex items-center justify-center gap-2 text-gray-400 hover:text-white transition-all duration-200"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span className="text-sm font-medium">Settings</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate("/profile");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex-1 h-11 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] flex items-center justify-center gap-2 text-white transition-all duration-200 shadow-lg shadow-purple-500/30"
+                  >
+                    <span className="font-semibold">{currentUser.name.charAt(0).toUpperCase()}</span>
+                    <span className="text-sm font-medium">Profile</span>
+                  </button>
+                </div>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full h-11 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 flex items-center justify-center gap-2 text-red-400 hover:text-red-300 transition-all duration-200"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-sm font-medium">Logout</span>
+                </button>
+              </div>
+            )}
             <div className="flex justify-center pt-2">
               <ThemeToggle />
             </div>
