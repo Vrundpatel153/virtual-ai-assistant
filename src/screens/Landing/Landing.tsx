@@ -13,7 +13,7 @@ export const Landing = (): JSX.Element => {
 
   useEffect(() => {
     if (authService.isAuthenticated()) {
-      navigate("/chat");
+      navigate("/home");
     }
   }, [navigate]);
 
@@ -29,14 +29,14 @@ export const Landing = (): JSX.Element => {
     if (isLogin) {
       const result = authService.signIn(email, password);
       if (result.success) {
-        navigate("/chat");
+        navigate("/home");
       } else {
         setError(result.error || "Login failed");
       }
     } else {
       const result = authService.signUp(email, password, name);
       if (result.success) {
-        navigate("/chat");
+        navigate("/home");
       } else {
         setError(result.error || "Signup failed");
       }
@@ -49,7 +49,7 @@ export const Landing = (): JSX.Element => {
     
     if (googleEmail && googleName) {
       authService.signInWithGoogle(googleEmail, googleName);
-      navigate("/chat");
+      navigate("/home");
     }
   };
 
