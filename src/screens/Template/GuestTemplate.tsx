@@ -4,11 +4,11 @@ import { Card, CardContent } from "../../components/ui/card";
 import { MessageSquare, Wrench, ChartBar as BarChart3, Sparkles, Zap, Brain, Mic as Mic2, Clock } from "lucide-react";
 import { Navbar } from "../../components/Navbar";
 import ModelCanvas from "../../components/ModelCanvas";
-import { conversationManager, metricsManager } from "../../lib/historyManager";
-import { authService } from "../../lib/auth";
+import { conversationManager } from "../../lib/historyManager";
 import { t, useI18n } from "../../lib/i18n";
+import { authService } from "../../lib/auth";
 
-export const Template = (): JSX.Element => {
+export const GuestTemplate = (): JSX.Element => {
   useI18n();
   const navigate = useNavigate();
   const user = authService.getCurrentUser();
@@ -20,15 +20,13 @@ export const Template = (): JSX.Element => {
     navigate(path);
   };
   const [totalChats, setTotalChats] = useState(0);
-  const [sessionCount, setSessionCount] = useState(0);
-  const [totalHours, setTotalHours] = useState(0);
+  // Use static example metrics for guest view to avoid coupling with real user metrics
+  const [sessionCount] = useState(12);
+  const [totalHours] = useState(4.5);
 
   useEffect(() => {
-    const refresh = () => {
-      setTotalChats(conversationManager.getAllConversations().length);
-      setSessionCount(metricsManager.get().sessionCount);
-      setTotalHours(metricsManager.getTotalHours());
-    };
+    // Only reflect local conversations count for demo; keep metrics static
+    const refresh = () => setTotalChats(conversationManager.getAllConversations().length);
     refresh();
     const id = setInterval(refresh, 5000);
     return () => clearInterval(id);
@@ -127,7 +125,7 @@ export const Template = (): JSX.Element => {
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.3),transparent_50%)]" />
                 <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.2)_0%,transparent_60%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.15),transparent_50%)]" />
-                <div className="absolute inset-0 opacity-30 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMC41Ii8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')]" />
+                {/* Decorative grid removed in guest template to avoid data-URL parsing issues */}
 
                 <CardContent className="p-4 md:p-6 h-full relative z-10 flex flex-col items-center justify-start pt-4 md:pt-6 text-center">
                   <div className="flex items-center gap-2 mb-2 bg-white/20 backdrop-blur-sm px-3 md:px-4 py-1.5 md:py-2 rounded-full border border-white/30 shadow-lg">

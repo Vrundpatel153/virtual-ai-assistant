@@ -6,6 +6,7 @@ import { pdfHistoryManager, remindersManager } from "../../lib/historyManager";
 import { useGlobalLoading } from "../../components/LoadingProvider";
 import { authService } from "../../lib/auth";
 import { t, useI18n } from "../../lib/i18n";
+import { useToast } from "../../components/ToastProvider";
 
 interface Tool {
   id: string;
@@ -32,6 +33,7 @@ export const AITools = (): JSX.Element => {
   const [remEmail, setRemEmail] = useState(currentUser?.email || "");
   const [remSuccess, setRemSuccess] = useState<string>("");
   const { setLoading } = useGlobalLoading();
+  const { showToast } = useToast();
 
   useEffect(() => {
     setHistory(pdfHistoryManager.getAllRecords());
@@ -67,13 +69,13 @@ export const AITools = (): JSX.Element => {
       setSelectedFile(file);
       setSummary("");
     } else {
-      alert(t('pleaseSelectPdf'));
+      showToast({ variant: 'error', title: t('pdfSummarizer'), description: t('pleaseSelectPdf') });
     }
   };
 
   const handleCreateReminder = () => {
     if (!remDesc.trim()) {
-      alert(t('enterReminderDescription'));
+      showToast({ variant: 'error', title: t('setReminder'), description: t('enterReminderDescription') });
       return;
     }
     let due: Date;
@@ -99,10 +101,10 @@ export const AITools = (): JSX.Element => {
   };
 
   const handleDeleteReminder = (id: string) => {
-    if (confirm(t('deleteReminderQuestion'))) {
-      remindersManager.delete(id);
-      setReminders(remindersManager.getAll());
-    }
+    // Soft delete without blocking confirm; could add inline undo in toast
+    remindersManager.delete(id);
+    setReminders(remindersManager.getAll());
+    showToast({ variant: 'info', title: t('reminders'), description: t('done') });
   };
 
   const handleSummarize = async () => {
@@ -122,10 +124,9 @@ export const AITools = (): JSX.Element => {
   };
 
   const deleteHistoryRecord = (id: string) => {
-    if (confirm(t('deletePdfSummaryQuestion'))) {
-      pdfHistoryManager.deleteRecord(id);
-      setHistory(pdfHistoryManager.getAllRecords());
-    }
+    pdfHistoryManager.deleteRecord(id);
+    setHistory(pdfHistoryManager.getAllRecords());
+    showToast({ variant: 'info', title: t('pdfSummaries'), description: t('done') });
   };
 
   return (

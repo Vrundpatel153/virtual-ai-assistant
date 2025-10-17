@@ -125,6 +125,8 @@ const dict = {
     changePassword: 'Change Password',
     performanceTitle: 'Performance',
     performanceNote: 'Disables heavy visuals like the 3D model. Re-enable anytime.',
+  customCursor: 'Custom cursor',
+  customCursorDesc: 'Use our gradient cursor across the app. Turn off to restore the system cursor.',
     languageDesc: 'Choose your preferred language',
     // Landing
     landingTitle: 'AI Assistant Hub',
@@ -316,6 +318,8 @@ const dict = {
     changePassword: 'पासवर्ड बदलें',
     performanceTitle: 'प्रदर्शन',
     performanceNote: '3D मॉडल जैसी भारी दृश्यावलियों को अक्षम करता है। कभी भी पुन: सक्षम करें।',
+  customCursor: 'कस्टम कर्सर',
+  customCursorDesc: 'ऐप में हमारा ग्रेडिएंट कर्सर उपयोग करें। सिस्टम कर्सर वापस लाने के लिए बंद करें।',
     languageDesc: 'अपनी पसंदीदा भाषा चुनें',
     // Landing
     landingTitle: 'एआई असिस्टेंट हब',

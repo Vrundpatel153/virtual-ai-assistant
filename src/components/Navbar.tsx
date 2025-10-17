@@ -5,11 +5,12 @@ import { ThemeToggle } from "./ThemeToggle";
 import { authService } from "../lib/auth";
 import { metricsManager, notificationsManager, remindersManager } from "../lib/historyManager";
 import { t, useI18n } from "../lib/i18n";
+import AuthModal from "./AuthModal";
 
 export const Navbar = (): JSX.Element => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState<number>(notificationsManager.unreadCount());
+  const [unreadCount, setUnreadCount] = useState<number>(() => authService.isAuthenticated() ? notificationsManager.unreadCount() : 0);
   const lastActiveRef = useRef<number | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,32 +25,55 @@ export const Navbar = (): JSX.Element => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Track active time and process due reminders periodically
+  // Track active time and process due reminders periodically for authenticated users only
   useEffect(() => {
+    if (!authService.isAuthenticated()) return;
     lastActiveRef.current = Date.now();
     const interval = setInterval(() => {
-      // accumulate active time
       if (lastActiveRef.current) {
         const now = Date.now();
         const delta = now - lastActiveRef.current;
         metricsManager.addActiveMs(delta);
         lastActiveRef.current = now;
       }
-      // refresh unread notifications and process reminders
       remindersManager.processDue(new Date());
       setUnreadCount(notificationsManager.unreadCount());
-    }, 10000); // every 10s
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
 
   const currentUser = authService.getCurrentUser();
+  const [authOpen, setAuthOpen] = useState(false);
+  const openAuth = (mode: 'signin'|'signup'='signin') => {
+    try { window.dispatchEvent(new CustomEvent('ai_open_auth_modal', { detail: { mode } })); } catch {}
+    setAuthOpen(true);
+  };
 
-  const navLinks = [
+  // Allow other components to trigger the auth modal
+  useEffect(() => {
+    const handler = (e: any) => {
+      const mode = e?.detail?.mode;
+      if (mode) {
+        try { window.dispatchEvent(new CustomEvent('ai_open_auth_modal', { detail: { mode } })); } catch {}
+      }
+      setAuthOpen(true);
+    };
+    window.addEventListener('ai_trigger_auth_modal', handler as any);
+    return () => window.removeEventListener('ai_trigger_auth_modal', handler as any);
+  }, []);
+
+  const navLinks = currentUser ? [
     { icon: <Home className="w-4 h-4" />, label: t('home'), path: "/" },
     { icon: <MessageSquare className="w-4 h-4" />, label: t('chat'), path: "/chat" },
     { icon: <Mic className="w-4 h-4" />, label: t('voice'), path: "/voice" },
     { icon: <Wrench className="w-4 h-4" />, label: t('aiTools'), path: "/ai-tools" },
     { icon: <Bell className="w-4 h-4" />, label: t('notifications'), path: "/notifications" },
+    { icon: <CreditCard className="w-4 h-4" />, label: t('pricing'), path: "/pricing" },
+  ] : [
+    { icon: <Home className="w-4 h-4" />, label: t('home'), path: "/" },
+    { icon: <MessageSquare className="w-4 h-4" />, label: t('chat'), path: "/chat" },
+    { icon: <Mic className="w-4 h-4" />, label: t('voice'), path: "/voice" },
+    { icon: <Wrench className="w-4 h-4" />, label: t('aiTools'), path: "/ai-tools" },
     { icon: <CreditCard className="w-4 h-4" />, label: t('pricing'), path: "/pricing" },
   ];
 
@@ -67,63 +91,88 @@ export const Navbar = (): JSX.Element => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-6">
-        <div className="flex items-center justify-between h-16 md:h-20">
-          <div
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 md:gap-3 cursor-pointer"
-          >
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#a855f7] flex items-center justify-center shadow-lg shadow-purple-500/30 relative overflow-hidden group">
+  <div className="flex items-center justify-between h-16 md:h-20 perspective-800">
+          <div onClick={() => navigate("/")} className="flex items-center gap-3 md:gap-4 cursor-pointer group lift-3d">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#a855f7] flex items-center justify-center shadow-lg shadow-purple-500/30 relative overflow-hidden group-hover:scale-105 transition-transform">
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <Wrench className="w-4 h-4 md:w-5 md:h-5 text-white relative z-10" />
+              <Wrench className="w-5 h-5 md:w-5 md:h-5 text-white relative z-10" />
             </div>
-            <div>
-              <h1 className="text-white font-bold text-base md:text-xl">{t('appName')}</h1>
-              <p className="text-gray-400 text-[10px] md:text-xs">{t('subtitle')}</p>
+            <div className="transition-transform">
+              <h1 className="text-white font-bold text-lg md:text-xl leading-tight">{t('appName')}</h1>
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-6 lg:gap-8">
+          <div className="hidden md:flex items-center gap-2 lg:gap-4 perspective-800">
             {navLinks.map((link) => (
               <NavLink
                 key={link.path}
                 icon={link.icon}
                 label={link.label}
                 active={location.pathname === link.path}
-                onClick={() => navigate(link.path)}
+                onClick={() => {
+                  if (!currentUser && link.path !== '/pricing' && link.path !== '/') {
+                    openAuth('signin');
+                  } else {
+                    navigate(link.path);
+                  }
+                }}
               />
             ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3 perspective-800">
             <ThemeToggle />
-            <button
-              onClick={() => navigate("/notifications")}
-              className="relative w-9 h-9 md:w-10 md:h-10 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:border-[#3d4266]/70"
-            >
-              <Bell className="w-4 h-4 md:w-5 md:h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full border border-white/20">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
             {currentUser && (
+              <button
+                onClick={() => navigate("/notifications")}
+                className="relative w-9 h-9 md:w-10 md:h-10 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:border-[#3d4266]/70 hover:shadow-lg hover:shadow-purple-500/20 lift-3d"
+              >
+                <Bell className="w-4 h-4 md:w-5 md:h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full border border-white/20">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            )}
+            {!currentUser ? (
               <>
                 <button
                   onClick={() => navigate("/settings")}
-                  className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:border-[#3d4266]/70"
+                  className="h-9 md:h-10 px-3 md:px-4 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 text-gray-300 hover:text-white transition-all duration-200 lift-3d"
+                >
+                  {t('settings')}
+                </button>
+                <button
+                  onClick={() => openAuth('signin')}
+                  className="h-9 md:h-10 px-3 md:px-4 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 text-gray-300 hover:text-white transition-all duration-200 lift-3d"
+                >
+                  {t('signIn')}
+                </button>
+                <button
+                  onClick={() => openAuth('signup')}
+                  className="h-9 md:h-10 px-3 md:px-4 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] text-white transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 lift-3d"
+                >
+                  {t('signUp')}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => navigate("/settings")}
+                  className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:border-[#3d4266]/70 lift-3d"
                 >
                   <Settings className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
                 <button
                   onClick={() => navigate("/profile")}
-                  className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] hover:from-[#6d28d9] hover:to-[#7c3aed] flex items-center justify-center text-white transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105"
+                  className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] hover:from-[#6d28d9] hover:to-[#7c3aed] flex items-center justify-center text-white transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 lift-3d"
                 >
                   <span className="font-semibold">{currentUser.name.charAt(0).toUpperCase()}</span>
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 flex items-center justify-center text-red-400 hover:text-red-300 transition-all duration-200"
+                  className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 flex items-center justify-center text-red-400 hover:text-red-300 transition-all duration-200 lift-3d"
                 >
                   <LogOut className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
@@ -148,24 +197,42 @@ export const Navbar = (): JSX.Element => {
                 label={link.label}
                 active={location.pathname === link.path}
                 onClick={() => {
-                  navigate(link.path);
+                  if (!currentUser && link.path !== '/pricing' && link.path !== '/') {
+                    openAuth('signin');
+                  } else {
+                    navigate(link.path);
+                  }
                   setIsMobileMenuOpen(false);
                 }}
               />
             ))}
-            <button
-              onClick={() => {
-                navigate("/notifications");
-                setIsMobileMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 bg-[#1e2139]/60 text-gray-400 hover:text-white hover:bg-[#252844] border border-[#2d3256]/50"
-            >
-              <Bell className="w-4 h-4" />
-              <span>{t('notifications')}</span>
-              {unreadCount > 0 && (
-                <span className="ml-auto text-[10px] bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full border border-red-500/30">{unreadCount}</span>
-              )}
-            </button>
+            {currentUser && (
+              <button
+                onClick={() => {
+                  navigate("/notifications");
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 bg-[#1e2139]/60 text-gray-400 hover:text-white hover:bg-[#252844] border border-[#2d3256]/50"
+              >
+                <Bell className="w-4 h-4" />
+                <span>{t('notifications')}</span>
+                {unreadCount > 0 && (
+                  <span className="ml-auto text-[10px] bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full border border-red-500/30">{unreadCount}</span>
+                )}
+              </button>
+            )}
+            {!currentUser && (
+              <button
+                onClick={() => {
+                  navigate("/settings");
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 bg-[#1e2139]/60 text-gray-400 hover:text-white hover:bg-[#252844] border border-[#2d3256]/50"
+              >
+                <Settings className="w-4 h-4" />
+                <span>{t('settings')}</span>
+              </button>
+            )}
             {currentUser && (
               <div className="space-y-2 pt-2">
                 <div className="flex gap-2">
@@ -208,6 +275,7 @@ export const Navbar = (): JSX.Element => {
           </div>
         )}
       </div>
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </nav>
   );
 };
@@ -226,7 +294,7 @@ const NavLink = ({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-3 py-2 md:px-4 rounded-xl font-medium text-xs md:text-sm transition-all duration-200 ${
+      className={`group relative flex items-center gap-2 px-3 py-2 md:px-4 rounded-xl font-medium text-xs md:text-sm transition-all duration-200 lift-3d ${
         active
           ? "bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] text-white shadow-lg shadow-purple-500/30"
           : "text-gray-400 hover:text-white hover:bg-[#1e2139]/60"
@@ -234,6 +302,7 @@ const NavLink = ({
     >
       {icon}
       <span>{label}</span>
+      <span className="pointer-events-none absolute -bottom-1 left-3 right-3 h-px bg-gradient-to-r from-transparent via-purple-400/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
     </button>
   );
 };
@@ -252,7 +321,7 @@ const MobileNavLink = ({
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 lift-3d ${
         active
           ? "bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] text-white shadow-lg shadow-purple-500/30"
           : "bg-[#1e2139]/60 text-gray-400 hover:text-white hover:bg-[#252844] border border-[#2d3256]/50"

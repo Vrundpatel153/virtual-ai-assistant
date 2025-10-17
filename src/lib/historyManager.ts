@@ -78,16 +78,18 @@ export interface AppSettings {
   reduceLoad?: boolean; // if true, disable heavy visuals like 3D model
   language?: 'en' | 'hi'; // English or Hindi
   hideTokenUsage?: boolean; // hide token usage indicator in chat
+  customCursor?: boolean; // show custom gradient cursor instead of system cursor
 }
 
 export const settingsManager = {
   get(): AppSettings {
     const saved = localStorage.getItem(SETTINGS_KEY);
-    if (!saved) return { reminderInApp: true, reminderEmail: false, plan: 'free', reduceLoad: false, language: 'en', hideTokenUsage: false };
+    if (!saved) return { reminderInApp: true, reminderEmail: false, plan: 'free', reduceLoad: false, language: 'en', hideTokenUsage: false, customCursor: true };
     const parsed = JSON.parse(saved) as AppSettings;
     if (parsed.reduceLoad === undefined) parsed.reduceLoad = false;
     if (!parsed.language) parsed.language = 'en';
     if (parsed.hideTokenUsage === undefined) parsed.hideTokenUsage = false;
+    if (parsed.customCursor === undefined) parsed.customCursor = true;
     return parsed;
   },
   update(partial: Partial<AppSettings>): AppSettings {

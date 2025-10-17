@@ -2,6 +2,8 @@ import { Navbar } from "../../components/Navbar";
 import { Check, CreditCard, Zap } from "lucide-react";
 import { settingsManager, tokenManager } from "../../lib/historyManager";
 import { t, useI18n } from "../../lib/i18n";
+import { useToast } from "../../components/ToastProvider";
+import { authService } from "../../lib/auth";
 
 const makePlans = () => ([
   { id: 'free', name: t('freeName'), price: '$0', desc: t('planFreeDesc'), tokens: 500, features: [t('tokensPerDay').replace('{count}', '500'), t('featureLocalTools'), t('featureRemindersNotifications')] },
@@ -11,12 +13,18 @@ const makePlans = () => ([
 
 export const Pricing = (): JSX.Element => {
   useI18n();
+  const { showToast } = useToast();
   const plans = makePlans();
   const current = settingsManager.get().plan || 'free';
+  const user = authService.getCurrentUser();
   const choosePlan = (plan: 'free' | 'pro' | 'premium') => {
+    if (!user) {
+      try { window.dispatchEvent(new CustomEvent('ai_trigger_auth_modal', { detail: { mode: 'signin' } })); } catch {}
+      return;
+    }
     settingsManager.update({ plan });
     tokenManager.reset();
-    alert(t('planUpdatedAlert').replace('{plan}', plan));
+    showToast({ variant: 'success', title: t('pricing'), description: t('planUpdatedAlert').replace('{plan}', plan) });
   };
 
   return (

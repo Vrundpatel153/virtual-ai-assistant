@@ -6,6 +6,7 @@ import { Modal } from "../../components/Modal";
 import { useGlobalLoading } from "../../components/LoadingProvider";
 import { tryHandleCommand } from "../../lib/commands";
 import { t, useI18n } from "../../lib/i18n";
+import { useToast } from "../../components/ToastProvider";
 
 interface Message {
   id: string;
@@ -44,6 +45,7 @@ export const Chat = (): JSX.Element => {
   const { setLoading } = useGlobalLoading();
   const [usageText, setUsageText] = useState<string>("");
   const [hideUsage, setHideUsage] = useState<boolean>(settingsManager.get().hideTokenUsage ?? false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const updateUsage = () => {
@@ -147,20 +149,18 @@ export const Chat = (): JSX.Element => {
 
   const deleteConversation = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-  if (confirm(t('deleteConversationQuestion'))) {
-      conversationManager.deleteConversation(id);
-      const updatedConversations = conversationManager.getAllConversations();
-      setConversations(updatedConversations);
-      
-      if (id === activeConversationId) {
-        if (updatedConversations.length > 0) {
-          setActiveConversationId(updatedConversations[0].id);
-          conversationManager.setActiveConversation(updatedConversations[0].id);
-        } else {
-          createNewConversation();
-        }
+    conversationManager.deleteConversation(id);
+    const updatedConversations = conversationManager.getAllConversations();
+    setConversations(updatedConversations);
+    if (id === activeConversationId) {
+      if (updatedConversations.length > 0) {
+        setActiveConversationId(updatedConversations[0].id);
+        conversationManager.setActiveConversation(updatedConversations[0].id);
+      } else {
+        createNewConversation();
       }
     }
+    showToast({ variant: 'info', title: t('historyTitle'), description: t('done') });
   };
 
   const activeConv = conversations.find(c => c.id === activeConversationId);

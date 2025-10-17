@@ -8,6 +8,7 @@ import { tryHandleMultiCommand } from "../../lib/commands";
 import { useASR, isASRAvailable, startListening, stopListening, speak, stopSpeaking } from "../../lib/speech";
 import { aiComplete } from "../../lib/ai";
 import { t, useI18n } from "../../lib/i18n";
+import { useToast } from "../../components/ToastProvider";
 
 export const Voice = (): JSX.Element => {
   type VoiceState = 'idle' | 'listening' | 'processing' | 'responding';
@@ -21,6 +22,7 @@ export const Voice = (): JSX.Element => {
   const [recognizedText, setRecognizedText] = useState<string>("");
   const [assistantReply, setAssistantReply] = useState<string>("");
   const asr = useASR();
+  const { showToast } = useToast();
 
   useEffect(() => {
     setHistory(voiceHistoryManager.getAllRecords());
@@ -104,10 +106,9 @@ export const Voice = (): JSX.Element => {
   }, [state]);
 
   const deleteHistoryRecord = (id: string) => {
-    if (confirm("Delete this recording?")) {
-      voiceHistoryManager.deleteRecord(id);
-      setHistory(voiceHistoryManager.getAllRecords());
-    }
+    voiceHistoryManager.deleteRecord(id);
+    setHistory(voiceHistoryManager.getAllRecords());
+    showToast({ variant: 'info', title: t('history'), description: t('done') });
   };
 
   return (
