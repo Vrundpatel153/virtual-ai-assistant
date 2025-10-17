@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Navbar } from "../../components/Navbar";
 import { Send, Sparkles, User, Bot, Trash2, Plus, MessageSquare, Clock } from "lucide-react";
 import { conversationManager } from "../../lib/historyManager";
+import { tryHandleCommand } from "../../lib/commands";
 
 interface Message {
   id: string;
@@ -65,6 +66,21 @@ export const Chat = (): JSX.Element => {
     setMessages([...messages, newMessage]);
     setInputValue("");
 
+    // Immediately try local commands (no token usage)
+    const text = newMessage.text.trim();
+    const cmd = tryHandleCommand(text);
+    if (cmd.handled) {
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: cmd.aiResponse || "",
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, aiResponse]);
+      return;
+    }
+
+    // Fallback response (placeholder for Gemini API call)
     setTimeout(() => {
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),

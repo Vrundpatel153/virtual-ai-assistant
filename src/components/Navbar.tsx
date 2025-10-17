@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { MessageSquare, Mic, Wrench, Menu, X, Settings, LogOut, Chrome as Home } from "lucide-react";
+import { MessageSquare, Mic, Wrench, Menu, X, Settings, LogOut, Chrome as Home, Bell } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { authService } from "../lib/auth";
+import { metricsManager, notificationsManager, remindersManager } from "../lib/historyManager";
 
 export const Navbar = (): JSX.Element => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(notificationsManager.unreadCount());
+  const lastActiveRef = useRef<number | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -19,6 +22,24 @@ export const Navbar = (): JSX.Element => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Track active time and process due reminders periodically
+  useEffect(() => {
+    lastActiveRef.current = Date.now();
+    const interval = setInterval(() => {
+      // accumulate active time
+      if (lastActiveRef.current) {
+        const now = Date.now();
+        const delta = now - lastActiveRef.current;
+        metricsManager.addActiveMs(delta);
+        lastActiveRef.current = now;
+      }
+      // refresh unread notifications and process reminders
+      remindersManager.processDue(new Date());
+      setUnreadCount(notificationsManager.unreadCount());
+    }, 10000); // every 10s
+    return () => clearInterval(interval);
+  }, []);
+
   const currentUser = authService.getCurrentUser();
 
   const navLinks = [
@@ -26,6 +47,7 @@ export const Navbar = (): JSX.Element => {
     { icon: <MessageSquare className="w-4 h-4" />, label: "Chat", path: "/chat" },
     { icon: <Mic className="w-4 h-4" />, label: "Voice", path: "/voice" },
     { icon: <Wrench className="w-4 h-4" />, label: "AI Tools", path: "/ai-tools" },
+    { icon: <Bell className="w-4 h-4" />, label: "Notifications", path: "/notifications" },
   ];
 
   const handleLogout = () => {
@@ -53,7 +75,7 @@ export const Navbar = (): JSX.Element => {
             </div>
             <div>
               <h1 className="text-white font-bold text-base md:text-xl">AI Assistant</h1>
-              <p className="text-gray-400 text-[10px] md:text-xs">Chat + Voice + Agents</p>
+              <p className="text-gray-400 text-[10px] md:text-xs">Chat + Voice + AI Tools</p>
             </div>
           </div>
 
@@ -71,6 +93,17 @@ export const Navbar = (): JSX.Element => {
 
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
+            <button
+              onClick={() => navigate("/notifications")}
+              className="relative w-9 h-9 md:w-10 md:h-10 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:border-[#3d4266]/70"
+            >
+              <Bell className="w-4 h-4 md:w-5 md:h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full border border-white/20">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
             {currentUser && (
               <>
                 <button
@@ -117,6 +150,19 @@ export const Navbar = (): JSX.Element => {
                 }}
               />
             ))}
+            <button
+              onClick={() => {
+                navigate("/notifications");
+                setIsMobileMenuOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 bg-[#1e2139]/60 text-gray-400 hover:text-white hover:bg-[#252844] border border-[#2d3256]/50"
+            >
+              <Bell className="w-4 h-4" />
+              <span>Notifications</span>
+              {unreadCount > 0 && (
+                <span className="ml-auto text-[10px] bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full border border-red-500/30">{unreadCount}</span>
+              )}
+            </button>
             {currentUser && (
               <div className="space-y-2 pt-2">
                 <div className="flex gap-2">

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Navbar } from "../../components/Navbar";
 import { Mic, Square, Volume2, Activity, Clock, Trash2, History } from "lucide-react";
 import { voiceHistoryManager } from "../../lib/historyManager";
+import { tryHandleCommand } from "../../lib/commands";
 
 export const Voice = (): JSX.Element => {
   const [isRecording, setIsRecording] = useState(false);
@@ -20,6 +21,10 @@ export const Voice = (): JSX.Element => {
         const newTranscript = "This is a demo transcript. In a real application, this would use the Web Speech API or a voice recognition service.";
         setTranscript((prev) => [...prev, newTranscript]);
         voiceHistoryManager.addRecord(newTranscript);
+        const cmd = tryHandleCommand(newTranscript);
+        if (cmd.handled && cmd.aiResponse) {
+          setTranscript((prev) => [...prev, `(Assistant): ${cmd.aiResponse}`]);
+        }
       }, 2000);
     } else {
       setIsRecording(false);

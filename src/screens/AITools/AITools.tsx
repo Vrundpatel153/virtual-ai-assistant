@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Navbar } from "../../components/Navbar";
-import { FileText, Upload, Sparkles, Loader2, CheckCircle, History, Clock, Trash2 } from "lucide-react";
+import { FileText, Upload, Sparkles, Loader2, CheckCircle, History, Clock, Trash2, CalendarClock, MailCheck } from "lucide-react";
 import { Card, CardContent } from "../../components/ui/card";
-import { pdfHistoryManager } from "../../lib/historyManager";
+import { pdfHistoryManager, remindersManager } from "../../lib/historyManager";
+import { authService } from "../../lib/auth";
 
 interface Tool {
   id: string;
@@ -18,10 +19,26 @@ export const AITools = (): JSX.Element => {
   const [summary, setSummary] = useState<string>("");
   const [history, setHistory] = useState(() => pdfHistoryManager.getAllRecords());
   const [showHistory, setShowHistory] = useState(false);
+  const [reminders, setReminders] = useState(remindersManager.getAll());
+
+  // Reminder form state
+  const currentUser = authService.getCurrentUser();
+  const [remDesc, setRemDesc] = useState("");
+  const [remDate, setRemDate] = useState(""); // yyyy-mm-dd
+  const [remTime, setRemTime] = useState(""); // HH:MM
+  const [remEmail, setRemEmail] = useState(currentUser?.email || "");
+  const [remSuccess, setRemSuccess] = useState<string>("");
 
   useEffect(() => {
     setHistory(pdfHistoryManager.getAllRecords());
+    setReminders(remindersManager.getAll());
   }, [summary]);
+
+  useEffect(() => {
+    // refresh reminders periodically to reflect due/complete changes from other pages
+    const id = setInterval(() => setReminders(remindersManager.getAll()), 3000);
+    return () => clearInterval(id);
+  }, []);
 
   const tools: Tool[] = [
     {
@@ -30,6 +47,13 @@ export const AITools = (): JSX.Element => {
       description: "Upload a PDF and get an AI-generated summary",
       icon: <FileText className="w-6 h-6 text-white" />,
       color: "from-blue-600 to-blue-700",
+    },
+    {
+      id: "set-reminder",
+      name: "Set Reminder",
+      description: "Create reminders that notify you in-app and via email (mock)",
+      icon: <CalendarClock className="w-6 h-6 text-white" />,
+      color: "from-purple-600 to-purple-700",
     },
   ];
 
@@ -40,6 +64,40 @@ export const AITools = (): JSX.Element => {
       setSummary("");
     } else {
       alert("Please select a PDF file");
+    }
+  };
+
+  const handleCreateReminder = () => {
+    if (!remDesc.trim()) {
+      alert("Please enter a reminder description");
+      return;
+    }
+    let due: Date;
+    if (remDate) {
+      const base = remDate + (remTime ? `T${remTime}:00` : 'T09:00:00');
+      due = new Date(base);
+    } else {
+      // default to 1 hour from now
+      due = new Date(Date.now() + 60 * 60 * 1000);
+    }
+    const item = remindersManager.add({ description: remDesc.trim(), dueAt: due, email: remEmail || undefined });
+    setReminders(remindersManager.getAll());
+    setRemSuccess(`Reminder set for ${item.dueAt.toLocaleString()}`);
+    setRemDesc("");
+    setRemDate("");
+    setRemTime("");
+    setTimeout(() => setRemSuccess(""), 3000);
+  };
+
+  const handleCompleteReminder = (id: string) => {
+    remindersManager.complete(id);
+    setReminders(remindersManager.getAll());
+  };
+
+  const handleDeleteReminder = (id: string) => {
+    if (confirm("Delete this reminder?")) {
+      remindersManager.delete(id);
+      setReminders(remindersManager.getAll());
     }
   };
 
@@ -77,7 +135,7 @@ export const AITools = (): JSX.Element => {
                 AI Tools
               </h1>
               <p className="text-gray-400 text-sm md:text-base">
-                Powerful AI-powered tools for your workflow
+                Powerful AI tools: PDF summaries, reminders with in-app notifications and mock email alerts.
               </p>
             </div>
             <button
@@ -145,6 +203,49 @@ export const AITools = (): JSX.Element => {
               </CardContent>
             </Card>
 
+            {/* Set Reminder Tool */}
+            <Card className="backdrop-blur-xl bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_48px_rgba(139,92,246,0.3)] transition-all duration-300 hover:border-white/20 rounded-[20px] md:rounded-[24px] overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tools[1].color} flex items-center justify-center shadow-lg`}>
+                    {tools[1].icon}
+                  </div>
+                </div>
+
+                <h3 className="text-white text-xl font-bold mb-2">{tools[1].name}</h3>
+                <p className="text-gray-400 text-sm mb-6">{tools[1].description}</p>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-1">Description</label>
+                    <input value={remDesc} onChange={(e) => setRemDesc(e.target.value)} placeholder='e.g., "Pay bills"' className="w-full bg-[#2a2d4a] text-white rounded-xl px-4 py-3 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm text-gray-300 mb-1">Date</label>
+                      <input type="date" value={remDate} onChange={(e) => setRemDate(e.target.value)} className="w-full bg-[#2a2d4a] text-white rounded-xl px-4 py-3 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-300 mb-1">Time</label>
+                      <input type="time" value={remTime} onChange={(e) => setRemTime(e.target.value)} className="w-full bg-[#2a2d4a] text-white rounded-xl px-4 py-3 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-1">Email (optional)</label>
+                    <input type="email" value={remEmail} onChange={(e) => setRemEmail(e.target.value)} placeholder="you@example.com" className="w-full bg-[#2a2d4a] text-white rounded-xl px-4 py-3 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm" />
+                    <p className="text-xs text-gray-500 mt-1">We'll send a mock email when it's due.</p>
+                  </div>
+                  {remSuccess && (
+                    <div className="flex items-center gap-2 text-green-300 text-sm"><MailCheck className="w-4 h-4" /> {remSuccess}</div>
+                  )}
+                  <button onClick={handleCreateReminder} className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-full font-semibold text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105">
+                    <CalendarClock className="w-4 h-4" />
+                    Create Reminder
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Summary Output */}
             {summary && (
               <Card className="backdrop-blur-xl bg-gradient-to-br from-green-900/30 to-green-800/20 border border-green-500/30 shadow-[0_8px_32px_rgba(34,197,94,0.2)] rounded-[20px] md:rounded-[24px] overflow-hidden">
@@ -185,41 +286,76 @@ export const AITools = (): JSX.Element => {
               <div className="p-4 border-b border-white/10">
                 <h2 className="text-white text-lg font-bold flex items-center gap-2">
                   <History className="w-5 h-5 text-blue-400" />
-                  PDF History
+                  History
                 </h2>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                {history.length === 0 ? (
-                  <p className="text-gray-400 text-sm text-center py-8">No PDF summaries yet</p>
-                ) : (
-                  history.map((record) => (
-                    <div
-                      key={record.id}
-                      className="group p-4 rounded-xl bg-[#2a2d4a]/50 border border-white/5 hover:bg-[#2a2d4a] hover:border-white/10 transition-all"
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                            <p className="text-white text-sm font-medium truncate">{record.fileName}</p>
+              <div className="flex-1 overflow-y-auto p-3 space-y-5">
+                <div>
+                  <h3 className="text-white text-sm font-semibold mb-2 flex items-center gap-2"><FileText className="w-4 h-4 text-blue-400" /> PDF Summaries</h3>
+                  {history.length === 0 ? (
+                    <p className="text-gray-400 text-sm text-center py-4">No PDF summaries yet</p>
+                  ) : (
+                    history.map((record) => (
+                      <div
+                        key={record.id}
+                        className="group p-4 rounded-xl bg-[#2a2d4a]/50 border border-white/5 hover:bg-[#2a2d4a] hover:border-white/10 transition-all mb-2"
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                              <p className="text-white text-sm font-medium truncate">{record.fileName}</p>
+                            </div>
+                            <div className="flex items-center gap-1 text-xs text-gray-400">
+                              <Clock className="w-3 h-3" />
+                              {record.timestamp.toLocaleString()}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1 text-xs text-gray-400">
-                            <Clock className="w-3 h-3" />
-                            {record.timestamp.toLocaleString()}
+                          <button
+                            onClick={() => deleteHistoryRecord(record.id)}
+                            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded-lg transition-all"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-400" />
+                          </button>
+                        </div>
+                        <p className="text-gray-300 text-xs line-clamp-3">{record.summary}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="text-white text-sm font-semibold mb-2 flex items-center gap-2"><CalendarClock className="w-4 h-4 text-purple-400" /> Reminders</h3>
+                  {reminders.length === 0 ? (
+                    <p className="text-gray-400 text-sm text-center py-4">No reminders yet</p>
+                  ) : (
+                    reminders.map((r) => (
+                      <div key={r.id} className="group p-4 rounded-xl bg-[#2a2d4a]/50 border border-white/5 hover:bg-[#2a2d4a] hover:border-white/10 transition-all mb-2">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="flex-1">
+                            <p className="text-white text-sm font-medium">{r.description}</p>
+                            <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
+                              <Clock className="w-3 h-3" />
+                              Due {r.dueAt.toLocaleString()}
+                            </div>
+                            {r.email && (
+                              <div className="text-xs text-gray-500 mt-1">Email: {r.email} {r.emailSent ? '(sent)' : ''}</div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {!r.completed && (
+                              <button onClick={() => handleCompleteReminder(r.id)} className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-lg bg-green-500/20 text-green-300 text-xs">Done</button>
+                            )}
+                            <button onClick={() => handleDeleteReminder(r.id)} className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded-lg transition-all">
+                              <Trash2 className="w-4 h-4 text-red-400" />
+                            </button>
                           </div>
                         </div>
-                        <button
-                          onClick={() => deleteHistoryRecord(record.id)}
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded-lg transition-all"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-400" />
-                        </button>
                       </div>
-                      <p className="text-gray-300 text-xs line-clamp-3">{record.summary}</p>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           </div>

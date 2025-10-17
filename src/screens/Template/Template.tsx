@@ -1,11 +1,27 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../components/ui/card";
-import { MessageSquare, Bot, ChartBar as BarChart3, Sparkles, Zap, Brain, Mic as Mic2 } from "lucide-react";
+import { MessageSquare, Wrench, ChartBar as BarChart3, Sparkles, Zap, Brain, Mic as Mic2, Clock } from "lucide-react";
 import { Navbar } from "../../components/Navbar";
 import ModelCanvas from "../../components/ModelCanvas";
+import { conversationManager, metricsManager } from "../../lib/historyManager";
 
 export const Template = (): JSX.Element => {
   const navigate = useNavigate();
+  const [totalChats, setTotalChats] = useState(0);
+  const [sessionCount, setSessionCount] = useState(0);
+  const [totalHours, setTotalHours] = useState(0);
+
+  useEffect(() => {
+    const refresh = () => {
+      setTotalChats(conversationManager.getAllConversations().length);
+      setSessionCount(metricsManager.get().sessionCount);
+      setTotalHours(metricsManager.getTotalHours());
+    };
+    refresh();
+    const id = setInterval(refresh, 5000);
+    return () => clearInterval(id);
+  }, []);
   const cardBaseClasses =
     "backdrop-blur-xl bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_0_80px_rgba(139,92,246,0.1),inset_0_1px_0_rgba(255,255,255,0.1)] hover:shadow-[0_8px_48px_rgba(139,92,246,0.3),0_0_100px_rgba(139,92,246,0.2)] transition-all duration-300 hover:border-white/20 cursor-pointer";
 
@@ -41,16 +57,16 @@ export const Template = (): JSX.Element => {
                 </CardContent>
               </Card>
 
-              {/* Active Conversations Card */}
+              {/* Total Chats Card */}
               <Card
                 className={`${cardBaseClasses} rounded-[20px] md:rounded-[28px] h-[160px] md:h-[180px] overflow-hidden relative`}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(139,92,246,0.12),transparent_60%)]" />
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05)_0%,transparent_50%)]" />
                 <CardContent className="p-6 md:p-8 h-full relative z-10 flex flex-col justify-between">
-                  <div className="text-[#f59e0b] text-5xl md:text-6xl font-bold drop-shadow-[0_2px_8px_rgba(245,158,11,0.3)]">247</div>
+                  <div className="text-[#f59e0b] text-5xl md:text-6xl font-bold drop-shadow-[0_2px_8px_rgba(245,158,11,0.3)]">{totalChats}</div>
                   <div>
-                    <div className="text-gray-300 text-xs md:text-sm mb-3">active conversations</div>
+                    <div className="text-gray-300 text-xs md:text-sm mb-3">total chats</div>
                     <div className="flex gap-2">
                       <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 shadow-lg shadow-orange-500/30" />
                       <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-purple-400 to-purple-600 opacity-80 shadow-lg shadow-purple-500/20" />
@@ -108,7 +124,7 @@ export const Template = (): JSX.Element => {
                     <span className="text-white font-semibold text-xs md:text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">AI Assistant</span>
                   </div>
                   <h1 className="text-white text-3xl md:text-5xl font-bold leading-tight mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
-                    Chat • Voice • Agents
+                    Chat • Voice • AI Tools
                   </h1>
                   
                 </CardContent>
@@ -149,9 +165,9 @@ export const Template = (): JSX.Element => {
 
                 </Card>
 
-                {/* AI Agents Card */}
+                {/* AI Tools Card */}
                 <Card
-                  onClick={() => navigate('/agents')}
+                  onClick={() => navigate('/ai-tools')}
                   className={`${cardBaseClasses} rounded-[20px] md:rounded-[28px] h-[280px] md:h-[359.5px] overflow-hidden relative z-10 mask-cut-top-left-arc [--cut-r:140px] lg:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-x:10px] [--cut-offset-y:6px] [pointer-events:auto]`}
                 >
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(120,119,198,0.12),transparent_60%)]" />
@@ -165,13 +181,13 @@ export const Template = (): JSX.Element => {
                     <div className="flex-1" />
                     <div>
                       <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] flex items-center justify-center mb-3 md:mb-4 shadow-lg shadow-purple-500/30">
-                        <Bot className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                        <Wrench className="w-5 h-5 md:w-6 md:h-6 text-white" />
                       </div>
                       <h3 className="text-white text-lg md:text-xl font-bold mb-2">
-                        Smart agents
+                        AI tools
                       </h3>
                       <p className="text-gray-400 text-xs md:text-sm leading-relaxed">
-                        Autonomous AI agents<br />for complex tasks.
+                        Summaries, reminders and more<br />to power your workflow.
                       </p>
                     </div>
                   </CardContent>
@@ -194,17 +210,16 @@ export const Template = (): JSX.Element => {
                 </CardContent>
               </Card>
 
-              {/* Response Time Card */}
+              {/* Sessions & Hours Card */}
               <Card
                 className={`${cardBaseClasses} rounded-[20px] md:rounded-[28px] h-[160px] md:h-[180px] overflow-hidden relative`}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(120,119,198,0.08),transparent_60%)]" />
                 <CardContent className="p-6 md:p-8 h-full relative z-10 flex flex-col items-center justify-center text-center">
-                  <div className="text-white text-5xl md:text-6xl font-bold mb-2">0.3s</div>
-                  <div className="flex items-center gap-2 text-purple-400">
-                    <span className="text-xl md:text-2xl">[</span>
-                    <span className="text-xs md:text-sm">avg response time</span>
-                    <span className="text-xl md:text-2xl">]</span>
+                  <div className="text-white text-2xl md:text-3xl font-bold mb-1">{sessionCount} sessions</div>
+                  <div className="flex items-center gap-2 text-purple-300">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-xs md:text-sm">{totalHours} hours active</span>
                   </div>
                 </CardContent>
               </Card>

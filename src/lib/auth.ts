@@ -4,6 +4,7 @@ export interface User {
   name: string;
   loginMethod: 'email' | 'google';
 }
+import { metricsManager } from "./historyManager";
 
 const AUTH_KEY = 'ai_assistant_user';
 const USERS_KEY = 'ai_assistant_users';
@@ -39,6 +40,8 @@ export const authService = {
     users.push({ ...newUser, password });
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
     localStorage.setItem(AUTH_KEY, JSON.stringify(newUser));
+    // Track session
+    metricsManager.incrementSession();
     
     return { success: true };
   },
@@ -54,6 +57,8 @@ export const authService = {
 
     const { password: _, ...userWithoutPassword } = user;
     localStorage.setItem(AUTH_KEY, JSON.stringify(userWithoutPassword));
+    // Track session
+    metricsManager.incrementSession();
     
     return { success: true };
   },
@@ -68,6 +73,8 @@ export const authService = {
     };
 
     localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+    // Track session
+    metricsManager.incrementSession();
     return { success: true };
   },
 

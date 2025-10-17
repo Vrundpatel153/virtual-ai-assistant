@@ -8,6 +8,7 @@ import { Voice } from "./screens/Voice/Voice";
 import { AITools } from "./screens/AITools/AITools";
 import { Settings } from "./screens/Settings/Settings";
 import { Profile } from "./screens/Profile/Profile";
+import { Notifications } from "./screens/Notifications/Notifications";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 // @ts-ignore
 import "./index.css";
@@ -23,6 +24,7 @@ createRoot(document.getElementById("app") as HTMLElement).render(
         <Route path="/ai-tools" element={<ProtectedRoute><AITools /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,
