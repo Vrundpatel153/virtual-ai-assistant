@@ -5,8 +5,10 @@ import { Card, CardContent } from "../../components/ui/card";
 import { useEffect, useState } from "react";
 import { settingsManager, tokenManager } from "../../lib/historyManager";
 import { useGlobalLoading } from "../../components/LoadingProvider";
+import { t, useI18n } from "../../lib/i18n";
 
 export const Settings = (): JSX.Element => {
+  useI18n();
   const { setLoading } = useGlobalLoading();
   const [reminderInApp, setReminderInApp] = useState(true);
   const [reminderEmail, setReminderEmail] = useState(false);
@@ -33,7 +35,7 @@ export const Settings = (): JSX.Element => {
     tokenManager.reset();
     setTimeout(()=>{
       setLoading(false);
-      alert('Settings saved.');
+      alert(t('settingsSaved'));
     }, 500);
   };
 
@@ -43,14 +45,14 @@ export const Settings = (): JSX.Element => {
   const settingsSections = [
     {
       icon: <Palette className="w-5 h-5 text-white" />,
-      title: "Appearance",
-      description: "Customize the look and feel",
+  title: t('appearanceTitle'),
+  description: t('appearanceDesc'),
       color: "from-purple-600 to-purple-700",
       component: (
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-white font-semibold mb-1">Theme</p>
-            <p className="text-gray-400 text-sm">Toggle between light and dark mode</p>
+            <p className="text-white font-semibold mb-1">{t('theme')}</p>
+            <p className="text-gray-400 text-sm">{t('themeDesc')}</p>
           </div>
           <ThemeToggle />
         </div>
@@ -58,93 +60,93 @@ export const Settings = (): JSX.Element => {
     },
     {
       icon: <Bell className="w-5 h-5 text-white" />,
-      title: "Reminder notifications",
-      description: "Choose how you want to be notified when a reminder is due",
+      title: t('remindersTitle'),
+      description: t('remindersDesc'),
       color: "from-blue-600 to-blue-700",
       component: (
         <div className="space-y-3">
           <label className="flex items-center justify-between cursor-pointer">
-            <span className="text-gray-300">In-app notification</span>
+            <span className="text-gray-300">{t('reminderInApp')}</span>
             <input type="checkbox" className="w-5 h-5 rounded accent-purple-600" checked={reminderInApp} onChange={(e)=>setReminderInApp(e.target.checked)} />
           </label>
           <label className="flex items-center justify-between cursor-pointer">
-            <span className="text-gray-300">Email notification</span>
+            <span className="text-gray-300">{t('reminderEmail')}</span>
             <input type="checkbox" className="w-5 h-5 rounded accent-purple-600" checked={reminderEmail} onChange={(e)=>setReminderEmail(e.target.checked)} />
           </label>
-          <p className="text-xs text-gray-400">Only reminders use these preferences.</p>
+          <p className="text-xs text-gray-400">{t('onlyRemindersNote')}</p>
         </div>
       ),
     },
     {
       icon: <KeyRound className="w-5 h-5 text-white" />,
-      title: "API Key",
-      description: "Use your own provider key to bypass token limits",
+      title: t('apiKeyTitle'),
+      description: t('apiKeyDesc'),
       color: "from-emerald-600 to-emerald-700",
       component: (
         <div className="space-y-3">
           <input
             type="password"
-            placeholder="Paste your API key"
+            placeholder={t('pasteApiKey')}
             value={apiKey}
             onChange={(e)=>setApiKey(e.target.value)}
             className="w-full bg-[#2a2d4a] text-white rounded-lg px-4 py-2 outline-none border border-white/10 focus:border-purple-500"
           />
-          <p className="text-xs text-gray-400">Your key is stored locally in your browser.</p>
+          <p className="text-xs text-gray-400">{t('localKeyNote')}</p>
         </div>
       ),
     },
     {
       icon: <Gauge className="w-5 h-5 text-white" />,
-      title: "Token usage",
-      description: "Daily usage resets automatically at midnight",
+      title: t('tokenUsageTitle'),
+      description: t('tokenUsageDesc'),
       color: "from-cyan-600 to-cyan-700",
       component: (
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-gray-300"><span>Used today</span><span>{usage.used}/{Number.isFinite(limit)? limit: '∞'}</span></div>
+          <div className="flex items-center justify-between text-gray-300"><span>{t('tokenUsedToday')}</span><span>{usage.used}/{Number.isFinite(limit)? limit: '∞'}</span></div>
           <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
             <div className="h-full bg-gradient-to-r from-purple-500 to-purple-700" style={{width: `${Number.isFinite(limit)? Math.min(100, (usage.used/(limit||1))*100):0}%`}} />
           </div>
           <label className="flex items-center justify-between cursor-pointer">
-            <span className="text-gray-300">Hide token usage in Chat</span>
+            <span className="text-gray-300">{t('hideUsageInChat')}</span>
             <input type="checkbox" className="w-5 h-5 rounded accent-purple-600" checked={hideTokenUsage} onChange={(e)=>setHideTokenUsage(e.target.checked)} />
           </label>
-          <a href="/pricing" className="inline-flex items-center gap-2 text-purple-300 hover:text-purple-200 text-sm font-semibold"><CreditCard className="w-4 h-4"/> Upgrade plan</a>
+          <a href="/pricing" className="inline-flex items-center gap-2 text-purple-300 hover:text-purple-200 text-sm font-semibold"><CreditCard className="w-4 h-4"/> {t('upgradePlan')}</a>
         </div>
       ),
     },
     {
       icon: <Lock className="w-5 h-5 text-white" />,
-      title: "Privacy & Security",
-      description: "Control your data and security settings",
+      title: t('privacyTitle'),
+      description: t('privacyDesc'),
       color: "from-green-600 to-green-700",
       component: (
         <div className="space-y-3">
           <label className="flex items-center justify-between cursor-pointer">
-            <span className="text-gray-300">Two-factor authentication</span>
+            <span className="text-gray-300">{t('twoFactor')}</span>
             <input type="checkbox" className="w-5 h-5 rounded accent-purple-600" />
           </label>
           <label className="flex items-center justify-between cursor-pointer">
-            <span className="text-gray-300">Data encryption</span>
+            <span className="text-gray-300">{t('dataEncryption')}</span>
             <input type="checkbox" defaultChecked className="w-5 h-5 rounded accent-purple-600" />
           </label>
           <button className="text-purple-400 hover:text-purple-300 text-sm font-semibold transition-colors">
-            Change Password →
+            {t('changePassword')} →
           </button>
         </div>
       ),
     },
     {
       icon: <Globe className="w-5 h-5 text-white" />,
-      title: "Language",
-      description: "Choose your preferred language",
+      title: t('language'),
+      description: t('languageDesc'),
       color: "from-orange-600 to-orange-700",
       component: (
         <div className="space-y-3">
           <div>
-            <label className="text-gray-300 text-sm mb-2 block">Language</label>
+            <label className="text-gray-300 text-sm mb-2 block">{t('language')}</label>
             <select value={language} onChange={e=>setLanguage(e.target.value as any)} className="w-full bg-[#2a2d4a] text-white rounded-lg px-4 py-2 outline-none border border-white/10 focus:border-purple-500 transition-colors">
-              <option value="en">English</option>
-              <option value="hi">Hindi</option>
+              <option value="en">{t('english')}</option>
+              <option value="hi">{t('hindi')}</option>
             </select>
           </div>
         </div>
@@ -152,16 +154,16 @@ export const Settings = (): JSX.Element => {
     },
     {
       icon: <Zap className="w-5 h-5 text-white" />,
-      title: "Performance",
-      description: "Toggle for a faster, more efficient experience",
+      title: t('performanceTitle'),
+      description: t('performanceDesc'),
       color: "from-yellow-600 to-yellow-700",
       component: (
         <div className="space-y-3">
           <label className="flex items-center justify-between cursor-pointer">
-            <span className="text-gray-300">Reduce Load</span>
+            <span className="text-gray-300">{t('performanceReduceLoad')}</span>
             <input type="checkbox" className="w-5 h-5 rounded accent-purple-600" checked={reduceLoad} onChange={(e)=>setReduceLoad(e.target.checked)} />
           </label>
-          <p className="text-xs text-gray-400">Disables heavy visuals like the 3D model. Re-enable anytime.</p>
+          <p className="text-xs text-gray-400">{t('performanceNote')}</p>
         </div>
       ),
     },
@@ -175,9 +177,9 @@ export const Settings = (): JSX.Element => {
           <div className="mb-8">
             <h1 className="text-white text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3">
               <SettingsIcon className="w-8 h-8 text-purple-400" />
-              Settings
+              {t('settings')}
             </h1>
-            <p className="text-gray-400 text-sm md:text-base">Customize your AI assistant experience</p>
+            <p className="text-gray-400 text-sm md:text-base">{t('settingsSubtitle')}</p>
           </div>
 
           <div className="space-y-4 md:space-y-6">
@@ -204,9 +206,9 @@ export const Settings = (): JSX.Element => {
 
           <div className="mt-8 flex justify-end gap-4">
             <button className="px-6 py-3 rounded-full font-semibold text-sm text-gray-300 hover:text-white transition-colors">
-              Reset to Defaults
+              {t('resetDefaults')}
             </button>
-            <button onClick={saveSettings} className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-8 py-3 rounded-full font-semibold text-sm shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105">Save Changes</button>
+            <button onClick={saveSettings} className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-8 py-3 rounded-full font-semibold text-sm shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105">{t('saveChanges')}</button>
           </div>
         </div>
       </div>

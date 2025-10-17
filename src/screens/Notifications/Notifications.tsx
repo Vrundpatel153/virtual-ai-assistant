@@ -3,8 +3,11 @@ import { Navbar } from "../../components/Navbar";
 import { Bell, CheckCheck, Trash2, Clock, Mail, CalendarClock, Megaphone } from "lucide-react";
 import { Card, CardContent } from "../../components/ui/card";
 import { notificationsManager, remindersManager, emailService } from "../../lib/historyManager";
+import { t, useI18n } from "../../lib/i18n";
 
 export const Notifications = (): JSX.Element => {
+  // subscribe to i18n changes
+  useI18n();
   const [items, setItems] = useState(notificationsManager.getAll());
   const [reminders, setReminders] = useState(remindersManager.getAll());
   const [outbox, setOutbox] = useState(emailService.getOutbox());
@@ -31,18 +34,18 @@ export const Notifications = (): JSX.Element => {
             <div>
               <h1 className="text-white text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3">
                 <Bell className="w-8 h-8 text-yellow-400" />
-                Notifications
+                {t('notificationsPageTitle')}
               </h1>
-              <p className="text-gray-400 text-sm md:text-base">Stay on top of reminders and system updates</p>
+              <p className="text-gray-400 text-sm md:text-base">{t('notificationsPageSubtitle')}</p>
             </div>
             <div className="flex gap-2">
               <button onClick={() => { notificationsManager.markAllRead(); setItems(notificationsManager.getAll()); }} className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl border border-white/10 hover:border-white/20 transition-all duration-300 flex items-center gap-2">
                 <CheckCheck className="w-4 h-4" />
-                Mark all read
+                {t('markAllRead')}
               </button>
               <button onClick={() => { notificationsManager.clear(); setItems([]); }} className="bg-red-500/10 hover:bg-red-500/20 text-red-300 px-4 py-2 rounded-xl border border-red-500/30 transition-all duration-300 flex items-center gap-2">
                 <Trash2 className="w-4 h-4" />
-                Clear
+                {t('clear')}
               </button>
             </div>
           </div>
@@ -54,13 +57,13 @@ export const Notifications = (): JSX.Element => {
                 <div className="p-4 border-b border-white/10 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Bell className="w-5 h-5 text-yellow-400" />
-                    <h2 className="text-white font-semibold">All Notifications</h2>
+                    <h2 className="text-white font-semibold">{t('allNotifications')}</h2>
                   </div>
-                  <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-white">{unread} unread</span>
+                  <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-white">{t('unreadCount').replace('{count}', String(unread))}</span>
                 </div>
                 <div className="max-h-[70vh] overflow-y-auto p-3 space-y-3">
                   {items.length === 0 ? (
-                    <p className="text-gray-400 text-sm text-center py-8">No notifications yet</p>
+                    <p className="text-gray-400 text-sm text-center py-8">{t('noNotificationsYet')}</p>
                   ) : (
                     items.map(n => (
                       <div key={n.id} className={`p-4 rounded-xl border ${n.read ? 'bg-[#2a2d4a]/40 border-white/5' : 'bg-[#2a2d4a] border-white/10'} flex items-start gap-3`}>
@@ -82,7 +85,7 @@ export const Notifications = (): JSX.Element => {
                           <p className="text-gray-300 text-xs mt-1">{n.message}</p>
                           {!n.read && (
                             <button onClick={() => { notificationsManager.markRead(n.id); setItems(notificationsManager.getAll()); }} className="mt-2 text-xs text-white/80 hover:text-white underline">
-                              Mark as read
+                              {t('markAsRead')}
                             </button>
                           )}
                         </div>
@@ -99,24 +102,24 @@ export const Notifications = (): JSX.Element => {
                 <CardContent className="p-0">
                   <div className="p-4 border-b border-white/10 flex items-center gap-2">
                     <CalendarClock className="w-5 h-5 text-yellow-400" />
-                    <h2 className="text-white font-semibold">Reminders</h2>
+                    <h2 className="text-white font-semibold">{t('reminders')}</h2>
                   </div>
                   <div className="max-h-[34vh] overflow-y-auto p-3 space-y-3">
                     {reminders.length === 0 ? (
-                      <p className="text-gray-400 text-sm text-center py-6">No reminders yet</p>
+                      <p className="text-gray-400 text-sm text-center py-6">{t('noRemindersYet')}</p>
                     ) : (
                       reminders.map(r => (
                         <div key={r.id} className="p-3 rounded-xl bg-[#2a2d4a]/50 border border-white/10">
                           <div className="flex items-center justify-between gap-2">
                             <p className="text-white text-sm font-medium">{r.description}</p>
                             {r.completed ? (
-                              <span className="text-xs text-green-300">Completed</span>
+                              <span className="text-xs text-green-300">{t('completed')}</span>
                             ) : (
-                              <span className="text-xs text-yellow-300">Due {r.dueAt.toLocaleString()}</span>
+                              <span className="text-xs text-yellow-300">{t('dueAt').replace('{when}', r.dueAt.toLocaleString())}</span>
                             )}
                           </div>
                           {r.email && (
-                            <div className="text-xs text-gray-400 mt-1">Email: {r.email} {r.emailSent ? '(sent)' : ''}</div>
+                            <div className="text-xs text-gray-400 mt-1">{t('emailLabel').replace('{email}', r.email).replace('{sent}', r.emailSent ? t('emailSent') : '')}</div>
                           )}
                         </div>
                       ))
@@ -129,11 +132,11 @@ export const Notifications = (): JSX.Element => {
                 <CardContent className="p-0">
                   <div className="p-4 border-b border-white/10 flex items-center gap-2">
                     <Mail className="w-5 h-5 text-blue-400" />
-                    <h2 className="text-white font-semibold">Email Outbox (mock)</h2>
+                    <h2 className="text-white font-semibold">{t('outbox')}</h2>
                   </div>
                   <div className="max-h-[34vh] overflow-y-auto p-3 space-y-3">
                     {outbox.length === 0 ? (
-                      <p className="text-gray-400 text-sm text-center py-6">No emails sent</p>
+                      <p className="text-gray-400 text-sm text-center py-6">{t('noEmailsSent')}</p>
                     ) : (
                       outbox.map(e => (
                         <div key={e.id} className="p-3 rounded-xl bg-[#2a2d4a]/50 border border-white/10">
@@ -141,7 +144,7 @@ export const Notifications = (): JSX.Element => {
                             <p className="text-white text-sm font-medium truncate">{e.subject}</p>
                             <span className="text-xs text-gray-400">{e.timestamp.toLocaleString()}</span>
                           </div>
-                          <div className="text-xs text-gray-400 mt-1">To: {e.to}</div>
+                          <div className="text-xs text-gray-400 mt-1">{t('toLabel').replace('{to}', e.to)}</div>
                           <p className="text-gray-300 text-xs mt-1 whitespace-pre-line line-clamp-3">{e.body}</p>
                         </div>
                       ))

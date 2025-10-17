@@ -5,6 +5,7 @@ import { Card, CardContent } from "../../components/ui/card";
 import { pdfHistoryManager, remindersManager } from "../../lib/historyManager";
 import { useGlobalLoading } from "../../components/LoadingProvider";
 import { authService } from "../../lib/auth";
+import { t, useI18n } from "../../lib/i18n";
 
 interface Tool {
   id: string;
@@ -15,6 +16,7 @@ interface Tool {
 }
 
 export const AITools = (): JSX.Element => {
+  useI18n();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [summary, setSummary] = useState<string>("");
@@ -45,15 +47,15 @@ export const AITools = (): JSX.Element => {
   const tools: Tool[] = [
     {
       id: "pdf-summarizer",
-      name: "PDF Summarizer",
-      description: "Upload a PDF and get an AI-generated summary",
+      name: t('pdfSummarizer'),
+      description: t('aiToolsSubtitle'),
       icon: <FileText className="w-6 h-6 text-white" />,
       color: "from-blue-600 to-blue-700",
     },
     {
       id: "set-reminder",
-      name: "Set Reminder",
-      description: "Create reminders that notify you in-app and via email (mock)",
+      name: t('setReminder'),
+      description: t('aiToolsSubtitle'),
       icon: <CalendarClock className="w-6 h-6 text-white" />,
       color: "from-purple-600 to-purple-700",
     },
@@ -65,13 +67,13 @@ export const AITools = (): JSX.Element => {
       setSelectedFile(file);
       setSummary("");
     } else {
-      alert("Please select a PDF file");
+      alert(t('pleaseSelectPdf'));
     }
   };
 
   const handleCreateReminder = () => {
     if (!remDesc.trim()) {
-      alert("Please enter a reminder description");
+      alert(t('enterReminderDescription'));
       return;
     }
     let due: Date;
@@ -84,7 +86,7 @@ export const AITools = (): JSX.Element => {
     }
     const item = remindersManager.add({ description: remDesc.trim(), dueAt: due, email: remEmail || undefined });
     setReminders(remindersManager.getAll());
-    setRemSuccess(`Reminder set for ${item.dueAt.toLocaleString()}`);
+  setRemSuccess(t('reminderSetFor').replace('{when}', item.dueAt.toLocaleString()));
     setRemDesc("");
     setRemDate("");
     setRemTime("");
@@ -97,7 +99,7 @@ export const AITools = (): JSX.Element => {
   };
 
   const handleDeleteReminder = (id: string) => {
-    if (confirm("Delete this reminder?")) {
+    if (confirm(t('deleteReminderQuestion'))) {
       remindersManager.delete(id);
       setReminders(remindersManager.getAll());
     }
@@ -120,7 +122,7 @@ export const AITools = (): JSX.Element => {
   };
 
   const deleteHistoryRecord = (id: string) => {
-    if (confirm("Delete this PDF summary?")) {
+    if (confirm(t('deletePdfSummaryQuestion'))) {
       pdfHistoryManager.deleteRecord(id);
       setHistory(pdfHistoryManager.getAllRecords());
     }
@@ -136,18 +138,16 @@ export const AITools = (): JSX.Element => {
             <div>
               <h1 className="text-white text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3">
                 <Sparkles className="w-8 h-8 text-purple-400" />
-                AI Tools
+                {t('aiToolsTitle')}
               </h1>
-              <p className="text-gray-400 text-sm md:text-base">
-                Powerful AI tools: PDF summaries, reminders with in-app notifications and mock email alerts.
-              </p>
+              <p className="text-gray-400 text-sm md:text-base">{t('aiToolsSubtitle')}</p>
             </div>
             <button
               onClick={() => setShowHistory(!showHistory)}
               className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl border border-white/10 hover:border-white/20 transition-all duration-300 flex items-center gap-2"
             >
               <History className="w-4 h-4" />
-              <span className="hidden md:inline">History</span>
+              <span className="hidden md:inline">{t('historyTitle')}</span>
             </button>
           </div>
 
@@ -176,10 +176,10 @@ export const AITools = (): JSX.Element => {
                     <label htmlFor="pdf-upload" className="cursor-pointer">
                       <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
                       <p className="text-white font-medium mb-1">
-                        {selectedFile ? selectedFile.name : "Click to upload PDF"}
+                        {selectedFile ? selectedFile.name : t('clickToUploadPdf')}
                       </p>
                       <p className="text-gray-400 text-sm">
-                        {selectedFile ? "File ready to summarize" : "Maximum file size: 10MB"}
+                        {selectedFile ? t('fileReady') : t('maxFileSize')}
                       </p>
                     </label>
                   </div>
@@ -193,12 +193,12 @@ export const AITools = (): JSX.Element => {
                       {isProcessing ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          Processing...
+                          {t('processing')}
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4" />
-                          Generate Summary
+                          {t('generateSummary')}
                         </>
                       )}
                     </button>
@@ -221,30 +221,30 @@ export const AITools = (): JSX.Element => {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-300 mb-1">Description</label>
-                    <input value={remDesc} onChange={(e) => setRemDesc(e.target.value)} placeholder='e.g., "Pay bills"' className="w-full bg-[#2a2d4a] text-white rounded-xl px-4 py-3 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm" />
+                    <label className="block text-sm text-gray-300 mb-1">{t('description')}</label>
+                    <input value={remDesc} onChange={(e) => setRemDesc(e.target.value)} placeholder={t('reminderPlaceholder')} className="w-full bg-[#2a2d4a] text-white rounded-xl px-4 py-3 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm" />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm text-gray-300 mb-1">Date</label>
+                      <label className="block text-sm text-gray-300 mb-1">{t('date')}</label>
                       <input type="date" value={remDate} onChange={(e) => setRemDate(e.target.value)} className="w-full bg-[#2a2d4a] text-white rounded-xl px-4 py-3 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm" />
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-300 mb-1">Time</label>
+                      <label className="block text-sm text-gray-300 mb-1">{t('time')}</label>
                       <input type="time" value={remTime} onChange={(e) => setRemTime(e.target.value)} className="w-full bg-[#2a2d4a] text-white rounded-xl px-4 py-3 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-300 mb-1">Email (optional, used only if email notifications are enabled in Settings)</label>
-                    <input type="email" value={remEmail} onChange={(e) => setRemEmail(e.target.value)} placeholder="you@example.com" className="w-full bg-[#2a2d4a] text-white rounded-xl px-4 py-3 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm" />
-                    <p className="text-xs text-gray-500 mt-1">We'll send a mock email when it's due.</p>
+                    <label className="block text-sm text-gray-300 mb-1">{t('emailOptional')}</label>
+                    <input type="email" value={remEmail} onChange={(e) => setRemEmail(e.target.value)} placeholder={t('emailPlaceholder')} className="w-full bg-[#2a2d4a] text-white rounded-xl px-4 py-3 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm" />
+                    <p className="text-xs text-gray-500 mt-1">{t('mockEmailNote')}</p>
                   </div>
                   {remSuccess && (
                     <div className="flex items-center gap-2 text-green-300 text-sm"><MailCheck className="w-4 h-4" /> {remSuccess}</div>
                   )}
                   <button onClick={handleCreateReminder} className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-full font-semibold text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105">
                     <CalendarClock className="w-4 h-4" />
-                    Create Reminder
+                    {t('createReminder')}
                   </button>
                 </div>
               </CardContent>
@@ -258,7 +258,7 @@ export const AITools = (): JSX.Element => {
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center">
                       <CheckCircle className="w-5 h-5 text-white" />
                     </div>
-                    <h3 className="text-white text-xl font-bold">Summary Result</h3>
+                    <h3 className="text-white text-xl font-bold">{t('summaryResult')}</h3>
                   </div>
                   <div className="bg-[#1e2139]/50 rounded-xl p-4 border border-white/10">
                     <p className="text-gray-300 text-sm whitespace-pre-line">{summary}</p>
@@ -274,11 +274,9 @@ export const AITools = (): JSX.Element => {
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-white text-xl font-bold">More Tools Coming Soon</h3>
+                <h3 className="text-white text-xl font-bold">{t('moreToolsComing')}</h3>
               </div>
-              <p className="text-gray-300 text-sm">
-                We're constantly adding new AI-powered tools to enhance your productivity. Stay tuned for updates!
-              </p>
+              <p className="text-gray-300 text-sm">{t('moreToolsDesc')}</p>
             </CardContent>
           </Card>
         </div>
@@ -290,15 +288,15 @@ export const AITools = (): JSX.Element => {
               <div className="p-4 border-b border-white/10">
                 <h2 className="text-white text-lg font-bold flex items-center gap-2">
                   <History className="w-5 h-5 text-blue-400" />
-                  History
+                  {t('historyTitle')}
                 </h2>
               </div>
               
               <div className="flex-1 overflow-y-auto p-3 space-y-5">
                 <div>
-                  <h3 className="text-white text-sm font-semibold mb-2 flex items-center gap-2"><FileText className="w-4 h-4 text-blue-400" /> PDF Summaries</h3>
+                  <h3 className="text-white text-sm font-semibold mb-2 flex items-center gap-2"><FileText className="w-4 h-4 text-blue-400" /> {t('pdfSummaries')}</h3>
                   {history.length === 0 ? (
-                    <p className="text-gray-400 text-sm text-center py-4">No PDF summaries yet</p>
+                    <p className="text-gray-400 text-sm text-center py-4">{t('noPdfSummaries')}</p>
                   ) : (
                     history.map((record) => (
                       <div
@@ -330,9 +328,9 @@ export const AITools = (): JSX.Element => {
                 </div>
 
                 <div>
-                  <h3 className="text-white text-sm font-semibold mb-2 flex items-center gap-2"><CalendarClock className="w-4 h-4 text-purple-400" /> Reminders</h3>
+                  <h3 className="text-white text-sm font-semibold mb-2 flex items-center gap-2"><CalendarClock className="w-4 h-4 text-purple-400" /> {t('reminders')}</h3>
                   {reminders.length === 0 ? (
-                    <p className="text-gray-400 text-sm text-center py-4">No reminders yet</p>
+                    <p className="text-gray-400 text-sm text-center py-4">{t('noRemindersYet')}</p>
                   ) : (
                     reminders.map((r) => (
                       <div key={r.id} className="group p-4 rounded-xl bg-[#2a2d4a]/50 border border-white/5 hover:bg-[#2a2d4a] hover:border-white/10 transition-all mb-2">
@@ -341,15 +339,15 @@ export const AITools = (): JSX.Element => {
                             <p className="text-white text-sm font-medium">{r.description}</p>
                             <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
                               <Clock className="w-3 h-3" />
-                              Due {r.dueAt.toLocaleString()}
+                              {t('dueAt').replace('{when}', r.dueAt.toLocaleString())}
                             </div>
                             {r.email && (
-                              <div className="text-xs text-gray-500 mt-1">Email: {r.email} {r.emailSent ? '(sent)' : ''}</div>
+                              <div className="text-xs text-gray-500 mt-1">{t('emailLabel').replace('{email}', r.email).replace('{sent}', r.emailSent ? t('emailSent') : '')}</div>
                             )}
                           </div>
                           <div className="flex items-center gap-1">
                             {!r.completed && (
-                              <button onClick={() => handleCompleteReminder(r.id)} className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-lg bg-green-500/20 text-green-300 text-xs">Done</button>
+                              <button onClick={() => handleCompleteReminder(r.id)} className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-lg bg-green-500/20 text-green-300 text-xs">{t('done')}</button>
                             )}
                             <button onClick={() => handleDeleteReminder(r.id)} className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded-lg transition-all">
                               <Trash2 className="w-4 h-4 text-red-400" />

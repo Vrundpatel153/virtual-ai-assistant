@@ -2,14 +2,16 @@ import { Navbar } from "../../components/Navbar";
 import { User, Mail, Calendar, MapPin, Award, TrendingUp, MessageSquare, Mic } from "lucide-react";
 import { authService } from "../../lib/auth";
 import { Card, CardContent } from "../../components/ui/card";
+import { t, useI18n } from "../../lib/i18n";
 
 export const Profile = (): JSX.Element => {
+  useI18n();
   const user = authService.getCurrentUser();
   const stats = [
-    { label: "Total Chats", value: "247", icon: <MessageSquare className="w-5 h-5" />, color: "text-purple-400" },
-    { label: "Voice Sessions", value: "89", icon: <Mic className="w-5 h-5" />, color: "text-orange-400" },
-    { label: "Active Agents", value: "4", icon: <Award className="w-5 h-5" />, color: "text-blue-400" },
-    { label: "Hours Saved", value: "156", icon: <TrendingUp className="w-5 h-5" />, color: "text-green-400" },
+    { label: t('statsTotalChats'), value: "247", icon: <MessageSquare className="w-5 h-5" />, color: "text-purple-400" },
+    { label: t('statsVoiceSessions'), value: "89", icon: <Mic className="w-5 h-5" />, color: "text-orange-400" },
+    { label: t('statsActiveAgents'), value: "4", icon: <Award className="w-5 h-5" />, color: "text-blue-400" },
+    { label: t('statsHoursSaved'), value: "156", icon: <TrendingUp className="w-5 h-5" />, color: "text-green-400" },
   ];
 
   const recentActivity = [
@@ -33,7 +35,7 @@ export const Profile = (): JSX.Element => {
 
                 <div className="flex-1 text-center md:text-left">
                   <h1 className="text-white text-2xl md:text-3xl font-bold mb-2">{user?.name || 'User'}</h1>
-                  <p className="text-gray-400 mb-4">{user?.loginMethod === 'google' ? 'Google' : 'Email'} Login</p>
+                  <p className="text-gray-400 mb-4">{user?.loginMethod === 'google' ? t('loginMethodGoogle') : t('loginMethodEmail')}</p>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                     <div className="flex items-center gap-2 text-gray-300 justify-center md:justify-start">
@@ -42,7 +44,7 @@ export const Profile = (): JSX.Element => {
                     </div>
                     <div className="flex items-center gap-2 text-gray-300 justify-center md:justify-start">
                       <Calendar className="w-4 h-4 text-purple-400" />
-                      Joined March 2024
+                      {t('joinedMarch2024')}
                     </div>
                     <div className="flex items-center gap-2 text-gray-300 justify-center md:justify-start">
                       <MapPin className="w-4 h-4 text-purple-400" />
@@ -52,7 +54,7 @@ export const Profile = (): JSX.Element => {
                 </div>
 
                 <button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-full font-semibold text-sm shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105">
-                  Edit Profile
+                  {t('editProfile')}
                 </button>
               </div>
             </CardContent>
@@ -79,7 +81,7 @@ export const Profile = (): JSX.Element => {
             <CardContent className="p-6">
               <h2 className="text-white text-xl font-bold mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-purple-400" />
-                Recent Activity
+                {t('recentActivityTitle')}
               </h2>
               <div className="space-y-3">
                 {recentActivity.map((activity, index) => (

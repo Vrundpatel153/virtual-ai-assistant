@@ -5,8 +5,10 @@ import { MessageSquare, Wrench, ChartBar as BarChart3, Sparkles, Zap, Brain, Mic
 import { Navbar } from "../../components/Navbar";
 import ModelCanvas from "../../components/ModelCanvas";
 import { conversationManager, metricsManager } from "../../lib/historyManager";
+import { t, useI18n } from "../../lib/i18n";
 
 export const Template = (): JSX.Element => {
+  useI18n();
   const navigate = useNavigate();
   const [totalChats, setTotalChats] = useState(0);
   const [sessionCount, setSessionCount] = useState(0);
@@ -46,13 +48,13 @@ export const Template = (): JSX.Element => {
                     <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#c084fc] flex items-center justify-center mb-4 md:mb-6 shadow-lg shadow-purple-500/40 border border-white/20">
                       <MessageSquare className="w-5 h-5 md:w-6 md:h-6 text-white" />
                     </div>
-                    <h3 className="text-white text-xl md:text-2xl font-bold mb-2 leading-tight">
-                      Intelligent<br />Chat<br />Assistant
+                    <h3 className="text-white text-xl md:text-2xl font-bold mb-2 leading-tight whitespace-pre-line">
+                      {t('intelligentChatAssistant')}
                     </h3>
                   </div>
                   <div className="text-gray-300 text-xs md:text-sm">
-                    <div className="font-semibold text-white mb-1 drop-shadow-sm">Real-time responses</div>
-                    <div className="text-gray-400">Context-aware conversations</div>
+                    <div className="font-semibold text-white mb-1 drop-shadow-sm">{t('realtimeResponses')}</div>
+                    <div className="text-gray-400">{t('contextAwareConversations')}</div>
                   </div>
                 </CardContent>
               </Card>
@@ -66,7 +68,7 @@ export const Template = (): JSX.Element => {
                 <CardContent className="p-6 md:p-8 h-full relative z-10 flex flex-col justify-between">
                   <div className="text-[#f59e0b] text-5xl md:text-6xl font-bold drop-shadow-[0_2px_8px_rgba(245,158,11,0.3)]">{totalChats}</div>
                   <div>
-                    <div className="text-gray-300 text-xs md:text-sm mb-3">total chats</div>
+                    <div className="text-gray-300 text-xs md:text-sm mb-3">{t('totalChatsLower')}</div>
                     <div className="flex gap-2">
                       <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 shadow-lg shadow-orange-500/30" />
                       <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-purple-400 to-purple-600 opacity-80 shadow-lg shadow-purple-500/20" />
@@ -85,7 +87,7 @@ export const Template = (): JSX.Element => {
                 <CardContent className="p-6 md:p-8 h-full relative z-10 flex items-center justify-center">
                   <button className="bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] hover:from-[#7c3aed] hover:to-[#9333ea] text-white px-6 md:px-8 py-3 md:py-4 rounded-full font-semibold text-base md:text-lg flex items-center gap-2 md:gap-3 shadow-[0_8px_32px_rgba(139,92,246,0.4)] hover:shadow-[0_8px_48px_rgba(139,92,246,0.6)] transition-all duration-300 hover:scale-105 border border-white/20">
                     <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
-                    Start Chat
+                    {t('startChat')}
                   </button>
                 </CardContent>
               </Card>
@@ -121,10 +123,10 @@ export const Template = (): JSX.Element => {
                 <CardContent className="p-4 md:p-6 h-full relative z-10 flex flex-col items-center justify-start pt-4 md:pt-6 text-center">
                   <div className="flex items-center gap-2 mb-2 bg-white/20 backdrop-blur-sm px-3 md:px-4 py-1.5 md:py-2 rounded-full border border-white/30 shadow-lg">
                     <Zap className="w-3 h-3 md:w-4 md:h-4 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
-                    <span className="text-white font-semibold text-xs md:text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">AI Assistant</span>
+                    <span className="text-white font-semibold text-xs md:text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">{t('aiAssistantLabel')}</span>
                   </div>
                   <h1 className="text-white text-3xl md:text-5xl font-bold leading-tight mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
-                    Chat • Voice • AI Tools
+                    {t('subtitle')}
                   </h1>
                   
                 </CardContent>
@@ -154,11 +156,9 @@ export const Template = (): JSX.Element => {
                       <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center mb-3 md:mb-4 shadow-lg shadow-orange-500/30">
                         <Mic2 className="w-5 h-5 md:w-6 md:h-6 text-white" />
                       </div>
-                      <h3 className="text-white text-lg md:text-xl font-bold mb-2">
-                        Voice assistant
-                      </h3>
+                      <h3 className="text-white text-lg md:text-xl font-bold mb-2">{t('voiceCardTitle')}</h3>
                       <p className="text-gray-400 text-xs md:text-sm leading-relaxed">
-                        Natural voice interactions<br />with speech recognition.
+                        {t('voiceCardDesc')}
                       </p>
                     </div>
                   </CardContent>
@@ -183,11 +183,9 @@ export const Template = (): JSX.Element => {
                       <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] flex items-center justify-center mb-3 md:mb-4 shadow-lg shadow-purple-500/30">
                         <Wrench className="w-5 h-5 md:w-6 md:h-6 text-white" />
                       </div>
-                      <h3 className="text-white text-lg md:text-xl font-bold mb-2">
-                        AI tools
-                      </h3>
+                      <h3 className="text-white text-lg md:text-xl font-bold mb-2">{t('aiToolsCardTitle')}</h3>
                       <p className="text-gray-400 text-xs md:text-sm leading-relaxed">
-                        Summaries, reminders and more<br />to power your workflow.
+                        {t('aiToolsCardDesc')}
                       </p>
                     </div>
                   </CardContent>
@@ -216,10 +214,10 @@ export const Template = (): JSX.Element => {
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(120,119,198,0.08),transparent_60%)]" />
                 <CardContent className="p-6 md:p-8 h-full relative z-10 flex flex-col items-center justify-center text-center">
-                  <div className="text-white text-2xl md:text-3xl font-bold mb-1">{sessionCount} sessions</div>
+                  <div className="text-white text-2xl md:text-3xl font-bold mb-1">{sessionCount} {t('sessionsLabel')}</div>
                   <div className="flex items-center gap-2 text-purple-300">
                     <Clock className="w-4 h-4" />
-                    <span className="text-xs md:text-sm">{totalHours} hours active</span>
+                    <span className="text-xs md:text-sm">{totalHours} {t('hoursActive')}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -232,12 +230,8 @@ export const Template = (): JSX.Element => {
                 <div className="absolute inset-0 bg-[linear-gradient(225deg,rgba(139,92,246,0.03)_0%,transparent_50%)]" />
                 <CardContent className="p-5 md:p-6 h-full relative z-10 flex flex-col justify-between">
                   <div>
-                    <h3 className="text-white text-lg md:text-xl font-bold mb-2">
-                      Analytics & insights
-                    </h3>
-                    <p className="text-gray-400 text-xs md:text-sm leading-relaxed">
-                      Track usage patterns<br />and performance metrics.
-                    </p>
+                    <h3 className="text-white text-lg md:text-xl font-bold mb-2">{t('analyticsInsights')}</h3>
+                    <p className="text-gray-400 text-xs md:text-sm leading-relaxed">{t('trackUsage')}</p>
                   </div>
 
                   {/* Interactive elements visualization */}
@@ -256,18 +250,18 @@ export const Template = (): JSX.Element => {
                       </div>
 
                       {/* Text labels */}
-                      <div className="absolute top-0 left-8 text-purple-400 text-[10px] md:text-xs rotate-[-20deg]">← Insights</div>
+                      <div className="absolute top-0 left-8 text-purple-400 text-[10px] md:text-xs rotate-[-20deg]">← {t('insightsLabel')}</div>
                       <div className="absolute bottom-4 right-2">
                         <div className="text-white text-[10px] md:text-xs bg-orange-500/20 border border-orange-500/40 px-2 py-1 rounded-full rotate-12">
-                          Real-time
+                          {t('realtimeLabel')}
                         </div>
                       </div>
 
                       {/* Side labels with icons */}
                       <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-1 text-[9px] md:text-[10px] text-gray-500">
-                        <div>• Usage</div>
-                        <div>• Speed</div>
-                        <div>• Quality</div>
+                        <div>• {t('usageLabel')}</div>
+                        <div>• {t('speedLabel')}</div>
+                        <div>• {t('qualityLabel')}</div>
                       </div>
                     </div>
                   </div>
