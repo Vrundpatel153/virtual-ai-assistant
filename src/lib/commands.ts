@@ -161,13 +161,56 @@ function tryReminder(text: string): CommandResult | null {
 }
 
 function tryOpen(text: string): CommandResult | null {
-  const m = text.match(/^(?:please\s+)?(?:open|launch|visit|go\s*to|navigate\s*to)\s+(.+)/i);
+  // Capture minimal target up to a connector like "and" or "then" or punctuation
+  const m = text.match(/^(?:please\s+)?(?:open|launch|visit|go\s*to|navigate\s*to)\s+(.+?)(?:\s+(?:and|then)\b|[.,;]|$)/i);
   if (m) {
-    const target = m[1].trim();
+    const target = (m[1] || '').trim();
+    if (!target) return null;
     const response = openTarget(target);
     return { handled: true, aiResponse: response };
   }
   return null;
+}
+
+// Split utterance into multiple intents using connectors outside quotes
+function splitMultiIntents(input: string): string[] {
+  const out: string[] = [];
+  let buf = "";
+  let quote: '"' | "'" | null = null;
+  const lower = input;
+  // We'll scan words to detect connectors only when surrounded by spaces and not inside quotes
+  for (let i = 0; i < lower.length; i++) {
+    const ch = lower[i];
+    if ((ch === '"' || ch === "'") && (quote === null || quote === ch)) {
+      quote = quote === null ? (ch as '"' | "'") : null;
+      buf += ch;
+      continue;
+    }
+    if (!quote) {
+      // punctuation as hard splitters
+      if (ch === ';') {
+        if (buf.trim()) out.push(buf.trim());
+        buf = "";
+        continue;
+      }
+      // Check for word connectors
+      if (/[a-z]/i.test(ch)) {
+        // potential start of a word; check upcoming sequence for connectors
+        const rest = lower.slice(i);
+        const match = rest.match(/^\s*(and|then)\b/i);
+        if (match && buf.trim()) {
+          // finalize current buffer and skip the connector
+          out.push(buf.trim());
+          buf = "";
+          i += match[0].length - 1; // -1 because for-loop will i++
+          continue;
+        }
+      }
+    }
+    buf += ch;
+  }
+  if (buf.trim()) out.push(buf.trim());
+  return out;
 }
 
 export function tryHandleCommand(text: string): CommandResult {
@@ -411,4 +454,20 @@ export function tryHandleCommand(text: string): CommandResult {
   if (/^clear\s+pdf\s+history$/i.test(t)) { pdfHistoryManager.clearAll(); return { handled: true, aiResponse: 'Cleared PDF history.' }; }
 
   return { handled: false };
+}
+
+// Handle possible multiple intents in one utterance, sequentially
+export function tryHandleMultiCommand(text: string): CommandResult {
+  const parts = splitMultiIntents(text).filter(Boolean);
+  if (parts.length <= 1) return tryHandleCommand(text);
+  const responses: string[] = [];
+  let anyHandled = false;
+  for (const part of parts) {
+    const res = tryHandleCommand(part);
+    if (res.handled) {
+      anyHandled = true;
+      if (res.aiResponse) responses.push(res.aiResponse);
+    }
+  }
+  return { handled: anyHandled, aiResponse: responses.join('\n') };
 }

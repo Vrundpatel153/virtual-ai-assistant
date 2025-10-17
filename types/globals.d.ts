@@ -18,3 +18,6 @@ declare module "url" {
 declare module "*.css";
 declare module "*.scss";
 declare module "*.sass";
+declare module 'react-speech-recognition';
+declare module 'speak-tts';
+declare module 'lovable-tagger';

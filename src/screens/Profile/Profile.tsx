@@ -1,8 +1,10 @@
 import { Navbar } from "../../components/Navbar";
 import { User, Mail, Calendar, MapPin, Award, TrendingUp, MessageSquare, Mic } from "lucide-react";
+import { authService } from "../../lib/auth";
 import { Card, CardContent } from "../../components/ui/card";
 
 export const Profile = (): JSX.Element => {
+  const user = authService.getCurrentUser();
   const stats = [
     { label: "Total Chats", value: "247", icon: <MessageSquare className="w-5 h-5" />, color: "text-purple-400" },
     { label: "Voice Sessions", value: "89", icon: <Mic className="w-5 h-5" />, color: "text-orange-400" },
@@ -30,13 +32,13 @@ export const Profile = (): JSX.Element => {
                 </div>
 
                 <div className="flex-1 text-center md:text-left">
-                  <h1 className="text-white text-2xl md:text-3xl font-bold mb-2">John Doe</h1>
-                  <p className="text-gray-400 mb-4">Premium User</p>
+                  <h1 className="text-white text-2xl md:text-3xl font-bold mb-2">{user?.name || 'User'}</h1>
+                  <p className="text-gray-400 mb-4">{user?.loginMethod === 'google' ? 'Google' : 'Email'} Login</p>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                     <div className="flex items-center gap-2 text-gray-300 justify-center md:justify-start">
                       <Mail className="w-4 h-4 text-purple-400" />
-                      john.doe@example.com
+                      {user?.email || '-'}
                     </div>
                     <div className="flex items-center gap-2 text-gray-300 justify-center md:justify-start">
                       <Calendar className="w-4 h-4 text-purple-400" />

@@ -9,12 +9,15 @@ import { AITools } from "./screens/AITools/AITools";
 import { Settings } from "./screens/Settings/Settings";
 import { Profile } from "./screens/Profile/Profile";
 import { Notifications } from "./screens/Notifications/Notifications";
+import { Pricing } from "./screens/Pricing/Pricing";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { LoadingProvider } from "./components/LoadingProvider";
 // @ts-ignore
 import "./index.css";
 
 createRoot(document.getElementById("app") as HTMLElement).render(
   <StrictMode>
+    <LoadingProvider>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
@@ -25,7 +28,9 @@ createRoot(document.getElementById("app") as HTMLElement).render(
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+  <Route path="/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
+    </LoadingProvider>
   </StrictMode>,
 );

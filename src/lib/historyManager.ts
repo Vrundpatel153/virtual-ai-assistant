@@ -66,6 +66,98 @@ const METRICS_KEY = 'ai_metrics';
 const EMAIL_OUTBOX_KEY = 'ai_email_outbox';
 const NOTES_KEY = 'ai_notes';
 const TODOS_KEY = 'ai_todos';
+const SETTINGS_KEY = 'ai_settings';
+const TOKENS_KEY = 'ai_tokens';
+
+// App Settings
+export interface AppSettings {
+  reminderInApp: boolean; // in-app notifications for reminders
+  reminderEmail: boolean; // email notifications for reminders
+  apiKey?: string; // optional user API key to bypass internal limits
+  plan?: 'free' | 'pro' | 'premium'; // pricing plan
+  reduceLoad?: boolean; // if true, disable heavy visuals like 3D model
+  language?: 'en' | 'hi'; // English or Hindi
+  hideTokenUsage?: boolean; // hide token usage indicator in chat
+}
+
+export const settingsManager = {
+  get(): AppSettings {
+    const saved = localStorage.getItem(SETTINGS_KEY);
+    if (!saved) return { reminderInApp: true, reminderEmail: false, plan: 'free', reduceLoad: false, language: 'en', hideTokenUsage: false };
+    const parsed = JSON.parse(saved) as AppSettings;
+    if (parsed.reduceLoad === undefined) parsed.reduceLoad = false;
+    if (!parsed.language) parsed.language = 'en';
+    if (parsed.hideTokenUsage === undefined) parsed.hideTokenUsage = false;
+    return parsed;
+  },
+  update(partial: Partial<AppSettings>): AppSettings {
+    const cur = this.get();
+    const next = { ...cur, ...partial } as AppSettings;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
+    try {
+      window.dispatchEvent(new CustomEvent('ai_settings_updated', { detail: next }));
+    } catch {}
+    return next;
+  },
+  clear(): void {
+    localStorage.removeItem(SETTINGS_KEY);
+  }
+};
+
+// Token usage manager (daily)
+interface TokenUsage {
+  date: string; // YYYY-MM-DD
+  used: number;
+}
+
+export const tokenManager = {
+  getTodayKey(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+  },
+  getUsage(): TokenUsage {
+    const saved = localStorage.getItem(TOKENS_KEY);
+    const today = this.getTodayKey();
+    if (!saved) return { date: today, used: 0 };
+    const parsed = JSON.parse(saved) as TokenUsage;
+    if (parsed.date !== today) return { date: today, used: 0 };
+    return parsed;
+  },
+  setUsage(u: TokenUsage): void {
+    localStorage.setItem(TOKENS_KEY, JSON.stringify(u));
+  },
+  getDailyLimit(): number {
+    const s = settingsManager.get();
+    if (s.apiKey && s.apiKey.trim()) return Number.POSITIVE_INFINITY; // user key bypasses local cap
+    const plan = s.plan || 'free';
+    if (plan === 'premium') return 50000;
+    if (plan === 'pro') return 5000;
+    return 500; // free
+  },
+  remaining(): number {
+    const usage = this.getUsage();
+    const limit = this.getDailyLimit();
+    if (!Number.isFinite(limit)) return Number.POSITIVE_INFINITY;
+    return Math.max(0, limit - usage.used);
+  },
+  canUse(n: number): boolean {
+    const usage = this.getUsage();
+    const limit = this.getDailyLimit();
+    if (!Number.isFinite(limit)) return true;
+    return usage.used + n <= limit;
+  },
+  consume(n: number): boolean {
+    const usage = this.getUsage();
+    const limit = this.getDailyLimit();
+    if (Number.isFinite(limit) && usage.used + n > limit) return false;
+    usage.used += n;
+    this.setUsage(usage);
+    return true;
+  },
+  reset(): void {
+    this.setUsage({ date: this.getTodayKey(), used: 0 });
+  }
+};
 
 // Chat Conversation Management
 export const conversationManager = {
@@ -386,33 +478,32 @@ export const remindersManager = {
   // Process due reminders: create notifications and send mock emails
   processDue(now = new Date()): Reminder[] {
     const all = this.getAll();
-    let changed = false;
     const processed: Reminder[] = [];
+    const keep: Reminder[] = [];
+    const prefs = settingsManager.get();
 
-    all.forEach(r => {
-      if (!r.completed && !r.notified && r.dueAt.getTime() <= now.getTime()) {
-        // Create notification
-        notificationsManager.add({
-          type: 'reminder',
-          title: 'Reminder due',
-          message: r.description,
-          relatedId: r.id,
-        });
-        r.notified = true;
-        // Simulate email send if address present
-        if (r.email && !r.emailSent) {
-          emailService.send(r.email, 'Reminder due', `Your reminder is due now: ${r.description}`);
-          r.emailSent = true;
+    for (const r of all) {
+      if (!r.completed && r.dueAt.getTime() <= now.getTime()) {
+        // Fire one-time reminder
+        if (prefs.reminderInApp) {
+          notificationsManager.add({
+            type: 'reminder',
+            title: 'Reminder due',
+            message: r.description,
+            relatedId: r.id,
+          });
         }
-        changed = true;
+        if (prefs.reminderEmail && r.email) {
+          emailService.send(r.email, 'Reminder due', `Your reminder is due now: ${r.description}`);
+        }
         processed.push(r);
+        // Do not keep (one-time)
+      } else {
+        keep.push(r);
       }
-    });
-
-    if (changed) {
-      localStorage.setItem(REMINDERS_KEY, JSON.stringify(all));
     }
 
+    localStorage.setItem(REMINDERS_KEY, JSON.stringify(keep));
     return processed;
   }
 };

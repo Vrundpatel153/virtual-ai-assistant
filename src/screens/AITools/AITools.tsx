@@ -3,6 +3,7 @@ import { Navbar } from "../../components/Navbar";
 import { FileText, Upload, Sparkles, Loader2, CheckCircle, History, Clock, Trash2, CalendarClock, MailCheck } from "lucide-react";
 import { Card, CardContent } from "../../components/ui/card";
 import { pdfHistoryManager, remindersManager } from "../../lib/historyManager";
+import { useGlobalLoading } from "../../components/LoadingProvider";
 import { authService } from "../../lib/auth";
 
 interface Tool {
@@ -28,6 +29,7 @@ export const AITools = (): JSX.Element => {
   const [remTime, setRemTime] = useState(""); // HH:MM
   const [remEmail, setRemEmail] = useState(currentUser?.email || "");
   const [remSuccess, setRemSuccess] = useState<string>("");
+  const { setLoading } = useGlobalLoading();
 
   useEffect(() => {
     setHistory(pdfHistoryManager.getAllRecords());
@@ -105,6 +107,7 @@ export const AITools = (): JSX.Element => {
     if (!selectedFile) return;
 
     setIsProcessing(true);
+    setLoading(true);
     
     // Simulate AI processing
     setTimeout(() => {
@@ -112,6 +115,7 @@ export const AITools = (): JSX.Element => {
       setSummary(newSummary);
       pdfHistoryManager.addRecord(selectedFile.name, newSummary);
       setIsProcessing(false);
+      setLoading(false);
     }, 2000);
   };
 
@@ -231,7 +235,7 @@ export const AITools = (): JSX.Element => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-300 mb-1">Email (optional)</label>
+                    <label className="block text-sm text-gray-300 mb-1">Email (optional, used only if email notifications are enabled in Settings)</label>
                     <input type="email" value={remEmail} onChange={(e) => setRemEmail(e.target.value)} placeholder="you@example.com" className="w-full bg-[#2a2d4a] text-white rounded-xl px-4 py-3 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm" />
                     <p className="text-xs text-gray-500 mt-1">We'll send a mock email when it's due.</p>
                   </div>

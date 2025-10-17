@@ -1,9 +1,45 @@
 import { Navbar } from "../../components/Navbar";
 import { ThemeToggle } from "../../components/ThemeToggle";
-import { Settings as SettingsIcon, Bell, Lock, Globe, Palette, Zap } from "lucide-react";
+import { Settings as SettingsIcon, Bell, Lock, Globe, Palette, Zap, KeyRound, Gauge, CreditCard } from "lucide-react";
 import { Card, CardContent } from "../../components/ui/card";
+import { useEffect, useState } from "react";
+import { settingsManager, tokenManager } from "../../lib/historyManager";
+import { useGlobalLoading } from "../../components/LoadingProvider";
 
 export const Settings = (): JSX.Element => {
+  const { setLoading } = useGlobalLoading();
+  const [reminderInApp, setReminderInApp] = useState(true);
+  const [reminderEmail, setReminderEmail] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const [plan, setPlan] = useState<'free'|'pro'|'premium'>('free');
+  const [reduceLoad, setReduceLoad] = useState(false);
+  const [language, setLanguage] = useState<'en'|'hi'>('en');
+  const [hideTokenUsage, setHideTokenUsage] = useState(false);
+
+  useEffect(() => {
+    const s = settingsManager.get();
+    setReminderInApp(!!s.reminderInApp);
+    setReminderEmail(!!s.reminderEmail);
+    setApiKey(s.apiKey || "");
+    setPlan((s.plan as any) || 'free');
+    setReduceLoad(!!s.reduceLoad);
+    setLanguage((s.language as any) || 'en');
+    setHideTokenUsage(!!s.hideTokenUsage);
+  }, []);
+
+  const saveSettings = () => {
+    setLoading(true);
+    settingsManager.update({ reminderInApp, reminderEmail, apiKey: apiKey.trim(), plan, reduceLoad, language, hideTokenUsage });
+    tokenManager.reset();
+    setTimeout(()=>{
+      setLoading(false);
+      alert('Settings saved.');
+    }, 500);
+  };
+
+  const usage = tokenManager.getUsage();
+  const limit = tokenManager.getDailyLimit();
+
   const settingsSections = [
     {
       icon: <Palette className="w-5 h-5 text-white" />,
@@ -22,23 +58,57 @@ export const Settings = (): JSX.Element => {
     },
     {
       icon: <Bell className="w-5 h-5 text-white" />,
-      title: "Notifications",
-      description: "Manage your notification preferences",
+      title: "Reminder notifications",
+      description: "Choose how you want to be notified when a reminder is due",
       color: "from-blue-600 to-blue-700",
       component: (
         <div className="space-y-3">
           <label className="flex items-center justify-between cursor-pointer">
-            <span className="text-gray-300">Email notifications</span>
-            <input type="checkbox" defaultChecked className="w-5 h-5 rounded accent-purple-600" />
+            <span className="text-gray-300">In-app notification</span>
+            <input type="checkbox" className="w-5 h-5 rounded accent-purple-600" checked={reminderInApp} onChange={(e)=>setReminderInApp(e.target.checked)} />
           </label>
           <label className="flex items-center justify-between cursor-pointer">
-            <span className="text-gray-300">Push notifications</span>
-            <input type="checkbox" defaultChecked className="w-5 h-5 rounded accent-purple-600" />
+            <span className="text-gray-300">Email notification</span>
+            <input type="checkbox" className="w-5 h-5 rounded accent-purple-600" checked={reminderEmail} onChange={(e)=>setReminderEmail(e.target.checked)} />
           </label>
+          <p className="text-xs text-gray-400">Only reminders use these preferences.</p>
+        </div>
+      ),
+    },
+    {
+      icon: <KeyRound className="w-5 h-5 text-white" />,
+      title: "API Key",
+      description: "Use your own provider key to bypass token limits",
+      color: "from-emerald-600 to-emerald-700",
+      component: (
+        <div className="space-y-3">
+          <input
+            type="password"
+            placeholder="Paste your API key"
+            value={apiKey}
+            onChange={(e)=>setApiKey(e.target.value)}
+            className="w-full bg-[#2a2d4a] text-white rounded-lg px-4 py-2 outline-none border border-white/10 focus:border-purple-500"
+          />
+          <p className="text-xs text-gray-400">Your key is stored locally in your browser.</p>
+        </div>
+      ),
+    },
+    {
+      icon: <Gauge className="w-5 h-5 text-white" />,
+      title: "Token usage",
+      description: "Daily usage resets automatically at midnight",
+      color: "from-cyan-600 to-cyan-700",
+      component: (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-gray-300"><span>Used today</span><span>{usage.used}/{Number.isFinite(limit)? limit: '∞'}</span></div>
+          <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-purple-500 to-purple-700" style={{width: `${Number.isFinite(limit)? Math.min(100, (usage.used/(limit||1))*100):0}%`}} />
+          </div>
           <label className="flex items-center justify-between cursor-pointer">
-            <span className="text-gray-300">Agent activity alerts</span>
-            <input type="checkbox" className="w-5 h-5 rounded accent-purple-600" />
+            <span className="text-gray-300">Hide token usage in Chat</span>
+            <input type="checkbox" className="w-5 h-5 rounded accent-purple-600" checked={hideTokenUsage} onChange={(e)=>setHideTokenUsage(e.target.checked)} />
           </label>
+          <a href="/pricing" className="inline-flex items-center gap-2 text-purple-300 hover:text-purple-200 text-sm font-semibold"><CreditCard className="w-4 h-4"/> Upgrade plan</a>
         </div>
       ),
     },
@@ -65,27 +135,16 @@ export const Settings = (): JSX.Element => {
     },
     {
       icon: <Globe className="w-5 h-5 text-white" />,
-      title: "Language & Region",
-      description: "Set your preferred language and location",
+      title: "Language",
+      description: "Choose your preferred language",
       color: "from-orange-600 to-orange-700",
       component: (
         <div className="space-y-3">
           <div>
             <label className="text-gray-300 text-sm mb-2 block">Language</label>
-            <select className="w-full bg-[#2a2d4a] text-white rounded-lg px-4 py-2 outline-none border border-white/10 focus:border-purple-500 transition-colors">
-              <option>English</option>
-              <option>Spanish</option>
-              <option>French</option>
-              <option>German</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-gray-300 text-sm mb-2 block">Time Zone</label>
-            <select className="w-full bg-[#2a2d4a] text-white rounded-lg px-4 py-2 outline-none border border-white/10 focus:border-purple-500 transition-colors">
-              <option>UTC-8 (Pacific Time)</option>
-              <option>UTC-5 (Eastern Time)</option>
-              <option>UTC+0 (London)</option>
-              <option>UTC+1 (Berlin)</option>
+            <select value={language} onChange={e=>setLanguage(e.target.value as any)} className="w-full bg-[#2a2d4a] text-white rounded-lg px-4 py-2 outline-none border border-white/10 focus:border-purple-500 transition-colors">
+              <option value="en">English</option>
+              <option value="hi">Hindi</option>
             </select>
           </div>
         </div>
@@ -94,22 +153,15 @@ export const Settings = (): JSX.Element => {
     {
       icon: <Zap className="w-5 h-5 text-white" />,
       title: "Performance",
-      description: "Optimize app performance and features",
+      description: "Toggle for a faster, more efficient experience",
       color: "from-yellow-600 to-yellow-700",
       component: (
         <div className="space-y-3">
           <label className="flex items-center justify-between cursor-pointer">
-            <span className="text-gray-300">Hardware acceleration</span>
-            <input type="checkbox" defaultChecked className="w-5 h-5 rounded accent-purple-600" />
+            <span className="text-gray-300">Reduce Load</span>
+            <input type="checkbox" className="w-5 h-5 rounded accent-purple-600" checked={reduceLoad} onChange={(e)=>setReduceLoad(e.target.checked)} />
           </label>
-          <label className="flex items-center justify-between cursor-pointer">
-            <span className="text-gray-300">Auto-save conversations</span>
-            <input type="checkbox" defaultChecked className="w-5 h-5 rounded accent-purple-600" />
-          </label>
-          <label className="flex items-center justify-between cursor-pointer">
-            <span className="text-gray-300">Reduced animations</span>
-            <input type="checkbox" className="w-5 h-5 rounded accent-purple-600" />
-          </label>
+          <p className="text-xs text-gray-400">Disables heavy visuals like the 3D model. Re-enable anytime.</p>
         </div>
       ),
     },
@@ -154,9 +206,7 @@ export const Settings = (): JSX.Element => {
             <button className="px-6 py-3 rounded-full font-semibold text-sm text-gray-300 hover:text-white transition-colors">
               Reset to Defaults
             </button>
-            <button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-8 py-3 rounded-full font-semibold text-sm shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105">
-              Save Changes
-            </button>
+            <button onClick={saveSettings} className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-8 py-3 rounded-full font-semibold text-sm shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105">Save Changes</button>
           </div>
         </div>
       </div>

@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "../../components/Navbar";
 import { Send, Sparkles, User, Bot, Trash2, Plus, MessageSquare, Clock } from "lucide-react";
-import { conversationManager } from "../../lib/historyManager";
+import { conversationManager, tokenManager, settingsManager } from "../../lib/historyManager";
+import { Modal } from "../../components/Modal";
+import { useGlobalLoading } from "../../components/LoadingProvider";
 import { tryHandleCommand } from "../../lib/commands";
+import { t, useI18n } from "../../lib/i18n";
 
 interface Message {
   id: string;
@@ -12,6 +15,7 @@ interface Message {
 }
 
 export const Chat = (): JSX.Element => {
+  useI18n();
   const [conversations, setConversations] = useState(() => conversationManager.getAllConversations());
   const [activeConversationId, setActiveConversationId] = useState<string | null>(() => {
     const activeId = conversationManager.getActiveConversationId();
@@ -36,6 +40,23 @@ export const Chat = (): JSX.Element => {
   
   const [inputValue, setInputValue] = useState("");
   const [showHistory, setShowHistory] = useState(false);
+  const [limitOpen, setLimitOpen] = useState(false);
+  const { setLoading } = useGlobalLoading();
+  const [usageText, setUsageText] = useState<string>("");
+  const [hideUsage, setHideUsage] = useState<boolean>(settingsManager.get().hideTokenUsage ?? false);
+
+  useEffect(() => {
+    const updateUsage = () => {
+      const u = tokenManager.getUsage();
+      const limit = tokenManager.getDailyLimit();
+      setUsageText(`${u.used}/${Number.isFinite(limit) ? limit : '∞'} tokens`);
+    };
+    updateUsage();
+    const onSettings = (e: any) => setHideUsage((e?.detail?.hideTokenUsage) ?? settingsManager.get().hideTokenUsage ?? false);
+    window.addEventListener('ai_settings_updated', onSettings as any);
+    const id = setInterval(updateUsage, 1500);
+    return () => { window.removeEventListener('ai_settings_updated', onSettings as any); clearInterval(id); };
+  }, []);
 
   useEffect(() => {
     if (activeConversationId) {
@@ -80,16 +101,28 @@ export const Chat = (): JSX.Element => {
       return;
     }
 
-    // Fallback response (placeholder for Gemini API call)
+    // Fallback response (Gemini) with token gating
+    const estTokens = Math.max(1, Math.ceil(newMessage.text.length / 4));
+    if (!tokenManager.canUse(estTokens)) {
+      setLimitOpen(true);
+      return;
+    }
+  tokenManager.consume(estTokens);
+  // refresh usage text quickly
+  const u = tokenManager.getUsage();
+  const limit = tokenManager.getDailyLimit();
+  setUsageText(`${u.used}/${Number.isFinite(limit) ? limit : '∞'} tokens`);
+    setLoading(true);
     setTimeout(() => {
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: "I understand your message. This is a demo response. In a real application, this would connect to an AI service.",
+  text: t('demoAiResponse'),
         sender: "ai",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
+      setLoading(false);
+    }, 800);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -114,7 +147,7 @@ export const Chat = (): JSX.Element => {
 
   const deleteConversation = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm("Delete this conversation?")) {
+  if (confirm(t('deleteConversationQuestion'))) {
       conversationManager.deleteConversation(id);
       const updatedConversations = conversationManager.getAllConversations();
       setConversations(updatedConversations);
@@ -145,7 +178,7 @@ export const Chat = (): JSX.Element => {
                 className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-purple-500/50 transition-all duration-300"
               >
                 <Plus className="w-4 h-4" />
-                New Chat
+                {t('newChat')}
               </button>
             </div>
             
@@ -196,9 +229,9 @@ export const Chat = (): JSX.Element => {
                   <MessageSquare className="w-6 h-6 text-purple-400" />
                 </button>
                 <Sparkles className="w-7 h-7 text-purple-400" />
-                {activeConv?.title || 'Chat Assistant'}
+                {activeConv?.title || t('chatHeader')}
               </h1>
-              <p className="text-gray-400 text-sm">Have a conversation with your AI assistant</p>
+              <p className="text-gray-400 text-sm">{t('chatTagline')}</p>
             </div>
           </div>
 
@@ -215,13 +248,13 @@ export const Chat = (): JSX.Element => {
                     </div>
                   )}
                   <div
-                    className={`max-w-[80%] md:max-w-[70%] rounded-2xl px-4 py-3 ${
+                    className={`max-w-[85%] md:max-w-[75%] rounded-2xl p-0 overflow-hidden ${
                       message.sender === "user"
                         ? "bg-gradient-to-br from-purple-600 to-purple-700 text-white"
                         : "bg-[#2a2d4a] text-gray-100"
                     }`}
                   >
-                    <p className="text-sm md:text-base">{message.text}</p>
+                    <pre className="whitespace-pre-wrap break-words text-xs md:text-sm leading-relaxed p-4 max-h-[50vh] overflow-auto font-mono">{message.text}</pre>
                   </div>
                   {message.sender === "user" && (
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
@@ -239,7 +272,7 @@ export const Chat = (): JSX.Element => {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Type your message..."
+                  placeholder={t('chatPlaceholder')}
                   className="flex-1 bg-[#2a2d4a] text-white rounded-full px-4 md:px-6 py-3 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm md:text-base"
                 />
                 <button
@@ -249,10 +282,22 @@ export const Chat = (): JSX.Element => {
                   <Send className="w-5 h-5" />
                 </button>
               </div>
+              {!hideUsage && (
+                <div className="mt-2 text-xs text-gray-400">{usageText}</div>
+              )}
             </div>
           </div>
         </div>
       </div>
+      <Modal isOpen={limitOpen} onClose={() => setLimitOpen(false)} title={t('dailyTokenLimitReached')} size="sm">
+        <div className="space-y-3">
+          <p className="text-gray-300 text-sm">{t('dailyTokenLimitMessage')}</p>
+          <div className="flex gap-2 pt-2">
+            <a href="/settings" className="flex-1 text-center bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-semibold">{t('addApiKey')}</a>
+            <a href="/pricing" className="flex-1 text-center bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-2 rounded-lg font-semibold">{t('viewPricing')}</a>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

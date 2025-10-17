@@ -1,4 +1,5 @@
-import React, { Suspense, useMemo } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
+import { settingsManager } from "../lib/historyManager";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { Environment, OrbitControls, useGLTF, Html } from "@react-three/drei";
 import { Box3, Vector3, Group, PerspectiveCamera } from "three";
@@ -160,6 +161,26 @@ export const ModelCanvas: React.FC<ModelCanvasProps> = ({
     [className]
   );
   const contentRef = React.useRef<Group>(null);
+  const [reduceLoad, setReduceLoad] = useState<boolean>(settingsManager.get().reduceLoad ?? false);
+
+  useEffect(() => {
+    const handler = (e: any) => setReduceLoad((e?.detail?.reduceLoad) ?? settingsManager.get().reduceLoad ?? false);
+    window.addEventListener('ai_settings_updated', handler as any);
+    return () => window.removeEventListener('ai_settings_updated', handler as any);
+  }, []);
+
+  if (reduceLoad) {
+    return (
+      <div className={`${containerClasses} grid place-items-center bg-gradient-to-br from-[#1e2139] to-[#252844] border border-white/10`}> 
+        <div className="relative w-40 h-40">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500/30 to-blue-500/30 blur-2xl" />
+          <div className="relative w-full h-full rounded-full border border-white/10 flex items-center justify-center">
+            <div className="text-white text-sm opacity-80">Reduced Load</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={containerClasses}>

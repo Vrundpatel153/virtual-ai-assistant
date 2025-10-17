@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Mail, Lock, User, Chrome } from "lucide-react";
 import { authService } from "../../lib/auth";
+import { useGlobalLoading } from "../../components/LoadingProvider";
 
 export const Landing = (): JSX.Element => {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,6 +11,7 @@ export const Landing = (): JSX.Element => {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { setLoading } = useGlobalLoading();
 
   useEffect(() => {
     if (authService.isAuthenticated()) {
@@ -26,6 +28,7 @@ export const Landing = (): JSX.Element => {
       return;
     }
 
+    setLoading(true);
     if (isLogin) {
       const result = authService.signIn(email, password);
       if (result.success) {
@@ -41,6 +44,7 @@ export const Landing = (): JSX.Element => {
         setError(result.error || "Signup failed");
       }
     }
+    setTimeout(()=> setLoading(false), 600);
   };
 
   const handleGoogleLogin = () => {
@@ -48,8 +52,10 @@ export const Landing = (): JSX.Element => {
     const googleName = prompt("Enter your name:");
     
     if (googleEmail && googleName) {
+      setLoading(true);
       authService.signInWithGoogle(googleEmail, googleName);
       navigate("/home");
+      setTimeout(()=> setLoading(false), 600);
     }
   };
 

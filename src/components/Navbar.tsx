@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { MessageSquare, Mic, Wrench, Menu, X, Settings, LogOut, Chrome as Home, Bell } from "lucide-react";
+import { MessageSquare, Mic, Wrench, Menu, X, Settings, LogOut, Chrome as Home, Bell, CreditCard } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { authService } from "../lib/auth";
 import { metricsManager, notificationsManager, remindersManager } from "../lib/historyManager";
+import { t, useI18n } from "../lib/i18n";
 
 export const Navbar = (): JSX.Element => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -12,6 +13,7 @@ export const Navbar = (): JSX.Element => {
   const lastActiveRef = useRef<number | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  useI18n();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,11 +45,12 @@ export const Navbar = (): JSX.Element => {
   const currentUser = authService.getCurrentUser();
 
   const navLinks = [
-    { icon: <Home className="w-4 h-4" />, label: "Home", path: "/" },
-    { icon: <MessageSquare className="w-4 h-4" />, label: "Chat", path: "/chat" },
-    { icon: <Mic className="w-4 h-4" />, label: "Voice", path: "/voice" },
-    { icon: <Wrench className="w-4 h-4" />, label: "AI Tools", path: "/ai-tools" },
-    { icon: <Bell className="w-4 h-4" />, label: "Notifications", path: "/notifications" },
+    { icon: <Home className="w-4 h-4" />, label: t('home'), path: "/" },
+    { icon: <MessageSquare className="w-4 h-4" />, label: t('chat'), path: "/chat" },
+    { icon: <Mic className="w-4 h-4" />, label: t('voice'), path: "/voice" },
+    { icon: <Wrench className="w-4 h-4" />, label: t('aiTools'), path: "/ai-tools" },
+    { icon: <Bell className="w-4 h-4" />, label: t('notifications'), path: "/notifications" },
+    { icon: <CreditCard className="w-4 h-4" />, label: t('pricing'), path: "/pricing" },
   ];
 
   const handleLogout = () => {
@@ -74,8 +77,8 @@ export const Navbar = (): JSX.Element => {
               <Wrench className="w-4 h-4 md:w-5 md:h-5 text-white relative z-10" />
             </div>
             <div>
-              <h1 className="text-white font-bold text-base md:text-xl">AI Assistant</h1>
-              <p className="text-gray-400 text-[10px] md:text-xs">Chat + Voice + AI Tools</p>
+              <h1 className="text-white font-bold text-base md:text-xl">{t('appName')}</h1>
+              <p className="text-gray-400 text-[10px] md:text-xs">{t('subtitle')}</p>
             </div>
           </div>
 
@@ -158,7 +161,7 @@ export const Navbar = (): JSX.Element => {
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 bg-[#1e2139]/60 text-gray-400 hover:text-white hover:bg-[#252844] border border-[#2d3256]/50"
             >
               <Bell className="w-4 h-4" />
-              <span>Notifications</span>
+              <span>{t('notifications')}</span>
               {unreadCount > 0 && (
                 <span className="ml-auto text-[10px] bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full border border-red-500/30">{unreadCount}</span>
               )}
@@ -174,7 +177,7 @@ export const Navbar = (): JSX.Element => {
                     className="flex-1 h-11 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 flex items-center justify-center gap-2 text-gray-400 hover:text-white transition-all duration-200"
                   >
                     <Settings className="w-4 h-4" />
-                    <span className="text-sm font-medium">Settings</span>
+                    <span className="text-sm font-medium">{t('settings')}</span>
                   </button>
                   <button
                     onClick={() => {
@@ -184,7 +187,7 @@ export const Navbar = (): JSX.Element => {
                     className="flex-1 h-11 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] flex items-center justify-center gap-2 text-white transition-all duration-200 shadow-lg shadow-purple-500/30"
                   >
                     <span className="font-semibold">{currentUser.name.charAt(0).toUpperCase()}</span>
-                    <span className="text-sm font-medium">Profile</span>
+                    <span className="text-sm font-medium">{t('profile')}</span>
                   </button>
                 </div>
                 <button
@@ -195,7 +198,7 @@ export const Navbar = (): JSX.Element => {
                   className="w-full h-11 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 flex items-center justify-center gap-2 text-red-400 hover:text-red-300 transition-all duration-200"
                 >
                   <LogOut className="w-4 h-4" />
-                  <span className="text-sm font-medium">Logout</span>
+                  <span className="text-sm font-medium">{t('logout')}</span>
                 </button>
               </div>
             )}
