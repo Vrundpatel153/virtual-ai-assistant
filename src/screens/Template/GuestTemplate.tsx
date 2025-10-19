@@ -37,30 +37,30 @@ export const GuestTemplate = (): JSX.Element => {
   return (
     <div className="bg-[#0a0b1e] w-full min-h-screen">
       <Navbar />
-      <div className="pt-20 md:pt-32 pb-8 md:pb-12 px-4 md:px-6 flex items-center justify-center">
+      <div className="pt-16 sm:pt-20 md:pt-28 lg:pt-32 pb-6 sm:pb-8 md:pb-10 lg:pb-12 px-3 sm:px-4 md:px-6 flex items-center justify-center">
         <div className="relative w-full max-w-[1400px]">
-          <div className="grid grid-cols-1 md:grid-cols-[minmax(200px,240px)_1fr_minmax(200px,240px)] gap-4 md:gap-5 auto-rows-min">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(200px,240px)_1fr_minmax(200px,240px)] gap-3 sm:gap-4 md:gap-5 auto-rows-min">
             {/* Column 1 - Left side (3 cards stacked) */}
-            <div className="flex flex-col gap-4 md:gap-5">
+            <div className="flex flex-col gap-3 sm:gap-4 md:gap-5 order-2 lg:order-1">
               {/* Chat Assistant Card */}
               <Card
                 onClick={() => gate('/chat')}
-                className={`${cardBaseClasses} rounded-[20px] md:rounded-[28px] h-[280px] md:h-[340px] overflow-hidden relative`}
+                className={`${cardBaseClasses} rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[220px] sm:h-[250px] md:h-[280px] lg:h-[340px] overflow-hidden relative`}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(139,92,246,0.15),transparent_50%)]" />
                 <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.05)_0%,transparent_50%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.08),transparent_60%)]" />
-                <CardContent className="p-6 md:p-8 h-full relative z-10 flex flex-col justify-between">
+                <CardContent className="p-4 sm:p-5 md:p-6 lg:p-8 h-full relative z-10 flex flex-col justify-between">
                   <div>
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#c084fc] flex items-center justify-center mb-4 md:mb-6 shadow-lg shadow-purple-500/40 border border-white/20">
-                      <MessageSquare className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#c084fc] flex items-center justify-center mb-3 sm:mb-4 md:mb-5 lg:mb-6 shadow-lg shadow-purple-500/40 border border-white/20">
+                      <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 lg:w-6 lg:h-6 text-white" />
                     </div>
-                    <h3 className="text-white text-xl md:text-2xl font-bold mb-2 leading-tight whitespace-pre-line">
+                    <h3 className="text-white text-lg sm:text-xl md:text-xl lg:text-2xl font-bold mb-1.5 sm:mb-2 leading-tight whitespace-pre-line">
                       {t('intelligentChatAssistant')}
                     </h3>
                   </div>
-                  <div className="text-gray-300 text-xs md:text-sm">
-                    <div className="font-semibold text-white mb-1 drop-shadow-sm">{t('realtimeResponses')}</div>
+                  <div className="text-gray-300 text-[11px] sm:text-xs md:text-sm">
+                    <div className="font-semibold text-white mb-0.5 sm:mb-1 drop-shadow-sm">{t('realtimeResponses')}</div>
                     <div className="text-gray-400">{t('contextAwareConversations')}</div>
                   </div>
                 </CardContent>
@@ -68,17 +68,17 @@ export const GuestTemplate = (): JSX.Element => {
 
               {/* Total Chats Card */}
               <Card
-                className={`${cardBaseClasses} rounded-[20px] md:rounded-[28px] h-[160px] md:h-[180px] overflow-hidden relative`}
+                className={`${cardBaseClasses} rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[140px] sm:h-[150px] md:h-[160px] lg:h-[180px] overflow-hidden relative`}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(139,92,246,0.12),transparent_60%)]" />
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05)_0%,transparent_50%)]" />
-                <CardContent className="p-6 md:p-8 h-full relative z-10 flex flex-col justify-between">
-                  <div className="text-[#f59e0b] text-5xl md:text-6xl font-bold drop-shadow-[0_2px_8px_rgba(245,158,11,0.3)]">{totalChats}</div>
+                <CardContent className="p-4 sm:p-5 md:p-6 lg:p-8 h-full relative z-10 flex flex-col justify-between">
+                  <div className="text-[#f59e0b] text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-bold drop-shadow-[0_2px_8px_rgba(245,158,11,0.3)]">{totalChats}</div>
                   <div>
-                    <div className="text-gray-300 text-xs md:text-sm mb-3">{t('totalChatsLower')}</div>
-                    <div className="flex gap-2">
-                      <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 shadow-lg shadow-orange-500/30" />
-                      <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-purple-400 to-purple-600 opacity-80 shadow-lg shadow-purple-500/20" />
+                    <div className="text-gray-300 text-[11px] sm:text-xs md:text-sm mb-2 sm:mb-2.5 md:mb-3">{t('totalChatsLower')}</div>
+                    <div className="flex gap-1.5 sm:gap-2">
+                      <div className="flex-1 h-1.5 sm:h-2 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 shadow-lg shadow-orange-500/30" />
+                      <div className="flex-1 h-1.5 sm:h-2 rounded-full bg-gradient-to-r from-purple-400 to-purple-600 opacity-80 shadow-lg shadow-purple-500/20" />
                     </div>
                   </div>
                 </CardContent>
@@ -87,13 +87,13 @@ export const GuestTemplate = (): JSX.Element => {
               {/* Start Chat Button Card */}
               <Card
                 onClick={() => gate('/chat')}
-                className={`${cardBaseClasses} rounded-[20px] md:rounded-[28px] h-[140px] md:h-[160px] overflow-hidden relative`}
+                className={`${cardBaseClasses} rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[120px] sm:h-[130px] md:h-[140px] lg:h-[160px] overflow-hidden relative`}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(139,92,246,0.12),transparent_60%)]" />
                 <div className="absolute inset-0 bg-[linear-gradient(225deg,rgba(255,255,255,0.05)_0%,transparent_50%)]" />
-                <CardContent className="p-6 md:p-8 h-full relative z-10 flex items-center justify-center">
-                  <button className="bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] hover:from-[#7c3aed] hover:to-[#9333ea] text-white px-6 md:px-8 py-3 md:py-4 rounded-full font-semibold text-base md:text-lg flex items-center gap-2 md:gap-3 shadow-[0_8px_32px_rgba(139,92,246,0.4)] hover:shadow-[0_8px_48px_rgba(139,92,246,0.6)] transition-all duration-300 hover:scale-105 border border-white/20">
-                    <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
+                <CardContent className="p-4 sm:p-5 md:p-6 lg:p-8 h-full relative z-10 flex items-center justify-center">
+                  <button className="bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] hover:from-[#7c3aed] hover:to-[#9333ea] text-white px-5 sm:px-6 md:px-7 lg:px-8 py-2.5 sm:py-3 md:py-3.5 lg:py-4 rounded-full font-semibold text-sm sm:text-base md:text-base lg:text-lg flex items-center gap-2 md:gap-2.5 lg:gap-3 shadow-[0_8px_32px_rgba(139,92,246,0.4)] hover:shadow-[0_8px_48px_rgba(139,92,246,0.6)] transition-all duration-300 hover:scale-105 border border-white/20">
+                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-4.5 md:h-4.5 lg:w-5 lg:h-5" />
                     {t('startChat')}
                   </button>
                 </CardContent>
@@ -101,9 +101,9 @@ export const GuestTemplate = (): JSX.Element => {
             </div>
 
             {/* Column 2 - Center (Hero card + 2 cards below) */}
-            <div className="relative flex flex-col gap-4 md:gap-5">
-              {/* Middle circle 3D canvas (shows through card cutouts) */}
-              <div className="hidden md:block absolute left-1/2 -translate-x-1/2 md:top-[146px] lg:top-[176px] md:w-[280px] md:h-[280px] lg:w-[340px] lg:h-[340px] rounded-full overflow-hidden z-30 [clip-path:circle(50%_at_50%_50%)]">
+            <div className="relative flex flex-col gap-3 sm:gap-4 md:gap-5 order-1 lg:order-2">
+              {/* Middle circle 3D canvas (shows through card cutouts) - Hidden on mobile/tablet */}
+              <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 lg:top-[146px] xl:top-[176px] lg:w-[280px] lg:h-[280px] xl:w-[340px] xl:h-[340px] rounded-full overflow-hidden z-30 [clip-path:circle(50%_at_50%_50%)]">
                 <ModelCanvas
                   src="/models/base_basic_pbr.glb"
                   autoRotate={false}
@@ -121,18 +121,18 @@ export const GuestTemplate = (): JSX.Element => {
                 <div className="pointer-events-none absolute inset-[-12%] rounded-full bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15),transparent_60%)]" />
               </div>
               {/* Hero Card - AI Assistant Hub */}
-              <Card className="bg-gradient-to-br from-[#8b5cf6] via-[#a855f7] to-[#c084fc] border-white/20 rounded-[20px] md:rounded-[28px] h-[280px] md:h-[340px] overflow-hidden relative z-10 shadow-[0_20px_60px_rgba(139,92,246,0.6),0_0_80px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_25px_80px_rgba(139,92,246,0.8),0_0_100px_rgba(168,85,247,0.4)] transition-all duration-300 mask-cut-top-arc [--cut-r:140px] lg:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-y:6px]">
+              <Card className="bg-gradient-to-br from-[#8b5cf6] via-[#a855f7] to-[#c084fc] border-white/20 rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[220px] sm:h-[250px] md:h-[280px] lg:h-[340px] overflow-hidden relative z-10 shadow-[0_20px_60px_rgba(139,92,246,0.6),0_0_80px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_25px_80px_rgba(139,92,246,0.8),0_0_100px_rgba(168,85,247,0.4)] transition-all duration-300 lg:mask-cut-top-arc [--cut-r:140px] xl:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-y:6px]">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.3),transparent_50%)]" />
                 <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.2)_0%,transparent_60%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.15),transparent_50%)]" />
                 {/* Decorative grid removed in guest template to avoid data-URL parsing issues */}
 
-                <CardContent className="p-4 md:p-6 h-full relative z-10 flex flex-col items-center justify-start pt-4 md:pt-6 text-center">
-                  <div className="flex items-center gap-2 mb-2 bg-white/20 backdrop-blur-sm px-3 md:px-4 py-1.5 md:py-2 rounded-full border border-white/30 shadow-lg">
-                    <Zap className="w-3 h-3 md:w-4 md:h-4 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
-                    <span className="text-white font-semibold text-xs md:text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">{t('aiAssistantLabel')}</span>
+                <CardContent className="p-3 sm:p-4 md:p-5 lg:p-6 h-full relative z-10 flex flex-col items-center justify-start pt-3 sm:pt-4 md:pt-5 lg:pt-6 text-center">
+                  <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2 bg-white/20 backdrop-blur-sm px-2.5 sm:px-3 md:px-3.5 lg:px-4 py-1 sm:py-1.5 md:py-1.5 lg:py-2 rounded-full border border-white/30 shadow-lg">
+                    <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
+                    <span className="text-white font-semibold text-[10px] sm:text-xs md:text-xs lg:text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">{t('aiAssistantLabel')}</span>
                   </div>
-                  <h1 className="text-white text-3xl md:text-5xl font-bold leading-tight mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
+                  <h1 className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-1.5 sm:mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
                     {t('subtitle')}
                   </h1>
                   
@@ -142,11 +142,11 @@ export const GuestTemplate = (): JSX.Element => {
 
               {/* No overlay circle needed; arcs are cut via masks above/below */}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
                 {/* Voice Assistant Card */}
                 <Card
                   onClick={() => gate('/voice')}
-                  className={`${cardBaseClasses} rounded-[20px] md:rounded-[28px] h-[280px] md:h-[359.5px] overflow-hidden relative z-10 mask-cut-top-right-arc [--cut-r:140px] lg:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-x:10px] [--cut-offset-y:6px] [pointer-events:auto]`}
+                  className={`${cardBaseClasses} rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[220px] sm:h-[250px] md:h-[280px] lg:h-[359.5px] overflow-hidden relative z-10 lg:mask-cut-top-right-arc [--cut-r:140px] xl:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-x:10px] [--cut-offset-y:6px] [pointer-events:auto]`}
                 >
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(120,119,198,0.12),transparent_60%)]" />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(139,92,246,0.04)_0%,transparent_40%)]" />
@@ -175,7 +175,7 @@ export const GuestTemplate = (): JSX.Element => {
                 {/* AI Tools Card */}
                 <Card
                   onClick={() => gate('/ai-tools')}
-                  className={`${cardBaseClasses} rounded-[20px] md:rounded-[28px] h-[280px] md:h-[359.5px] overflow-hidden relative z-10 mask-cut-top-left-arc [--cut-r:140px] lg:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-x:10px] [--cut-offset-y:6px] [pointer-events:auto]`}
+                  className={`${cardBaseClasses} rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[220px] sm:h-[250px] md:h-[280px] lg:h-[359.5px] overflow-hidden relative z-10 lg:mask-cut-top-left-arc [--cut-r:140px] xl:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-x:10px] [--cut-offset-y:6px] [pointer-events:auto]`}
                 >
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(120,119,198,0.12),transparent_60%)]" />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(139,92,246,0.04)_0%,transparent_40%)]" />
@@ -202,7 +202,7 @@ export const GuestTemplate = (): JSX.Element => {
             </div>
 
             {/* Column 3 - Right side (3 cards stacked) */}
-            <div className="flex flex-col gap-4 md:gap-5">
+            <div className="flex flex-col gap-3 sm:gap-4 md:gap-5 order-3">
               {/* AI Brain Icon Card */}
               <Card
                 className={`${cardBaseClasses} rounded-[20px] md:rounded-[28px] h-[140px] md:h-[160px] overflow-hidden relative`}
