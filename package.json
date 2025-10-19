@@ -21,6 +21,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.1",
+    "react-speech-recognition": "^4.0.1",
+    "speak-tts": "^2.0.8",
     "tailwind-merge": "2.5.4",
     "tailwindcss-animate": "1.0.7",
     "three": "^0.161.0"
