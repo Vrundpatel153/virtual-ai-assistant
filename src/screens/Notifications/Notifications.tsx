@@ -28,24 +28,26 @@ export const Notifications = (): JSX.Element => {
   return (
     <div className="bg-[#0a0b1e] w-full min-h-screen flex flex-col">
       <Navbar />
-      <div className="flex-1 pt-20 md:pt-24 pb-6 px-4 md:px-6 flex gap-4 max-w-7xl mx-auto w-full">
+      <div className="flex-1 pt-16 sm:pt-20 md:pt-24 pb-4 sm:pb-6 px-3 sm:px-4 md:px-6 flex gap-3 md:gap-4 max-w-7xl mx-auto w-full">
         <div className="flex-1 min-w-0">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h1 className="text-white text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3">
-                <Bell className="w-8 h-8 text-yellow-400" />
-                {t('notificationsPageTitle')}
+          <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-white text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
+                <Bell className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-yellow-400 flex-shrink-0" />
+                <span className="truncate">{t('notificationsPageTitle')}</span>
               </h1>
-              <p className="text-gray-400 text-sm md:text-base">{t('notificationsPageSubtitle')}</p>
+              <p className="text-gray-400 text-xs sm:text-sm md:text-base">{t('notificationsPageSubtitle')}</p>
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => { notificationsManager.markAllRead(); setItems(notificationsManager.getAll()); }} className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl border border-white/10 hover:border-white/20 transition-all duration-300 flex items-center gap-2">
-                <CheckCheck className="w-4 h-4" />
-                {t('markAllRead')}
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button onClick={() => { notificationsManager.markAllRead(); setItems(notificationsManager.getAll()); }} className="flex-1 sm:flex-none bg-white/5 hover:bg-white/10 text-white px-3 sm:px-4 py-2 rounded-xl border border-white/10 hover:border-white/20 transition-all duration-300 flex items-center justify-center gap-2 text-sm">
+                <CheckCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{t('markAllRead')}</span>
+                <span className="sm:hidden">Read</span>
               </button>
-              <button onClick={() => { notificationsManager.clear(); setItems([]); }} className="bg-red-500/10 hover:bg-red-500/20 text-red-300 px-4 py-2 rounded-xl border border-red-500/30 transition-all duration-300 flex items-center gap-2">
-                <Trash2 className="w-4 h-4" />
-                {t('clear')}
+              <button onClick={() => { notificationsManager.clear(); setItems([]); }} className="flex-1 sm:flex-none bg-red-500/10 hover:bg-red-500/20 text-red-300 px-3 sm:px-4 py-2 rounded-xl border border-red-500/30 transition-all duration-300 flex items-center justify-center gap-2 text-sm">
+                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{t('clear')}</span>
+                <span className="sm:hidden">Clear</span>
               </button>
             </div>
           </div>

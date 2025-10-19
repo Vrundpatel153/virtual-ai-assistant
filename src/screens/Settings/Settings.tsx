@@ -238,44 +238,44 @@ export const Settings = (): JSX.Element => {
   return (
     <div className="bg-[#0a0b1e] w-full min-h-screen flex flex-col">
       <Navbar />
-      <div className="flex-1 pt-20 md:pt-24 pb-6 px-4 md:px-6">
+      <div className="flex-1 pt-16 sm:pt-20 md:pt-24 pb-4 sm:pb-6 px-3 sm:px-4 md:px-6">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-white text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3">
-              <SettingsIcon className="w-8 h-8 text-purple-400" />
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-white text-2xl sm:text-3xl md:text-4xl font-bold mb-2 flex items-center gap-2 sm:gap-3">
+              <SettingsIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-purple-400" />
               {t('settings')}
             </h1>
-            <p className="text-gray-400 text-sm md:text-base">{t('settingsSubtitle')}</p>
+            <p className="text-gray-400 text-xs sm:text-sm md:text-base">{t('settingsSubtitle')}</p>
           </div>
 
-          <div className="space-y-4 md:space-y-6">
+          <div className="space-y-3 sm:space-y-4 md:space-y-6">
             {settingsSections.map((section, index) => (
               <Card
                 key={index}
-                className="backdrop-blur-xl bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-[20px] md:rounded-[24px] overflow-hidden"
+                className="backdrop-blur-xl bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-[16px] sm:rounded-[20px] md:rounded-[24px] overflow-hidden"
               >
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${section.color} flex items-center justify-center shadow-lg flex-shrink-0`}>
+                <CardContent className="p-4 sm:p-5 md:p-6">
+                  <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+                    <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br ${section.color} flex items-center justify-center shadow-lg flex-shrink-0`}>
                       {section.icon}
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-white text-lg font-bold mb-1">{section.title}</h3>
-                      <p className="text-gray-400 text-sm">{section.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white text-base sm:text-lg font-bold mb-1">{section.title}</h3>
+                      <p className="text-gray-400 text-xs sm:text-sm">{section.description}</p>
                     </div>
                   </div>
-                  <div className="pl-14">{section.component}</div>
+                  <div className="sm:pl-13 md:pl-14">{section.component}</div>
                 </CardContent>
               </Card>
             ))}
           </div>
 
           {isDirty && (
-            <div ref={actionsRef} className="mt-8 flex justify-end gap-4">
-              <button onClick={resetChanges} className="px-6 py-3 rounded-full font-semibold text-sm text-gray-300 hover:text-white transition-colors">
+            <div ref={actionsRef} className="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
+              <button onClick={resetChanges} className="w-full sm:w-auto px-6 py-3 rounded-full font-semibold text-sm text-gray-300 hover:text-white transition-colors order-2 sm:order-1">
                 {t('resetDefaults')}
               </button>
-              <button onClick={saveSettings} className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-8 py-3 rounded-full font-semibold text-sm shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105">{t('saveChanges')}</button>
+              <button onClick={saveSettings} className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-8 py-3 rounded-full font-semibold text-sm shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105 order-1 sm:order-2">{t('saveChanges')}</button>
             </div>
           )}
         </div>
