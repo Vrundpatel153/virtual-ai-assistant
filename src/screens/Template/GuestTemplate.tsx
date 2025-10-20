@@ -122,7 +122,7 @@ export const GuestTemplate = (): JSX.Element => {
                 <div className="pointer-events-none absolute inset-[-12%] rounded-full bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15),transparent_60%)]" />
               </div>
               {/* Hero Card - AI Assistant Hub */}
-              <Card className="bg-gradient-to-br from-[#8b5cf6] via-[#a855f7] to-[#c084fc] border-white/20 rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[480px] sm:h-[520px] md:h-[560px] lg:h-[340px] overflow-hidden relative z-10 shadow-[0_20px_60px_rgba(139,92,246,0.6),0_0_80px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_25px_80px_rgba(139,92,246,0.8),0_0_100px_rgba(168,85,247,0.4)] transition-all duration-300 lg:mask-cut-top-arc [--cut-r:140px] xl:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-y:6px]">
+              <Card className="bg-gradient-to-br from-[#8b5cf6] via-[#a855f7] to-[#c084fc] border-white/20 rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[360px] sm:h-[400px] md:h-[440px] lg:h-[340px] overflow-hidden relative z-10 shadow-[0_20px_60px_rgba(139,92,246,0.6),0_0_80px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_25px_80px_rgba(139,92,246,0.8),0_0_100px_rgba(168,85,247,0.4)] transition-all duration-300 lg:mask-cut-top-arc [--cut-r:140px] xl:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-y:6px]">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.3),transparent_50%)]" />
                 <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.2)_0%,transparent_60%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.15),transparent_50%)]" />
@@ -138,7 +138,7 @@ export const GuestTemplate = (): JSX.Element => {
                   </h1>
                   
                   {/* 3D Model - Inside hero card on mobile only */}
-                  <div className="lg:hidden w-full flex-1 mt-3 sm:mt-4 rounded-[12px] sm:rounded-[16px] overflow-hidden relative">
+                  <div className="lg:hidden w-full flex-1 min-h-[200px] mt-2 sm:mt-3 rounded-[12px] sm:rounded-[16px] overflow-hidden relative">
                     <ModelCanvas
                       src="/models/base_basic_pbr.glb"
                       autoRotate={true}

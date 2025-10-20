@@ -166,26 +166,26 @@ export const Chat = (): JSX.Element => {
   const activeConv = conversations.find(c => c.id === activeConversationId);
 
   return (
-    <div className="bg-[#0a0b1e] w-full min-h-screen flex flex-col">
+    <div className="bg-background w-full min-h-screen flex flex-col">
       <Navbar />
       <div className="flex-1 pt-16 sm:pt-20 md:pt-24 pb-4 sm:pb-6 px-3 sm:px-4 md:px-6 flex gap-3 md:gap-4 max-w-7xl mx-auto w-full">
         {/* History Sidebar */}
         <div className={`${showHistory ? 'fixed inset-0 z-40 bg-black/50 md:relative md:bg-transparent' : 'hidden'} md:block md:w-64 lg:w-80 md:flex-shrink-0`}>
-          <div className={`${showHistory ? 'absolute left-0 top-0 bottom-0 w-[85%] max-w-sm' : ''} md:relative md:w-full backdrop-blur-xl bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 border border-white/10 rounded-none md:rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] h-full overflow-hidden flex flex-col`}
+          <div className={`${showHistory ? 'absolute left-0 top-0 bottom-0 w-[85%] max-w-sm' : ''} md:relative md:w-full backdrop-blur-xl bg-card/95 border border-border rounded-none md:rounded-[20px] shadow-lg h-full overflow-hidden flex flex-col`}
             onClick={(e) => {
               if (showHistory && e.target === e.currentTarget) {
                 setShowHistory(false);
               }
             }}
           >
-            <div className="p-3 sm:p-4 border-b border-white/10">
+            <div className="p-3 sm:p-4 border-b border-border">
               <div className="flex items-center justify-between mb-3 md:hidden">
-                <h2 className="text-white font-semibold">{t('historyTitle')}</h2>
+                <h2 className="text-foreground font-semibold">{t('historyTitle')}</h2>
                 <button
                   onClick={() => setShowHistory(false)}
                   className="p-1 hover:bg-white/10 rounded-lg transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-400" />
+                  <X className="w-5 h-5 text-muted-foreground" />
                 </button>
               </div>
               <button
@@ -207,17 +207,17 @@ export const Chat = (): JSX.Element => {
                   }}
                   className={`group p-2.5 sm:p-3 rounded-xl cursor-pointer transition-all duration-200 ${
                     conv.id === activeConversationId
-                      ? 'bg-purple-600/20 border border-purple-500/50'
-                      : 'bg-[#2a2d4a]/50 border border-white/5 hover:bg-[#2a2d4a] hover:border-white/10'
+                      ? 'bg-primary/20 border border-primary/50'
+                      : 'bg-secondary/50 border border-border hover:bg-secondary hover:border-border'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400 flex-shrink-0" />
-                        <p className="text-white text-xs sm:text-sm font-medium truncate">{conv.title}</p>
+                        <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary flex-shrink-0" />
+                        <p className="text-foreground text-xs sm:text-sm font-medium truncate">{conv.title}</p>
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] sm:text-xs text-gray-400">
+                      <div className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground">
                         <Clock className="w-3 h-3" />
                         {conv.lastMessageAt.toLocaleDateString()}
                       </div>
@@ -239,21 +239,21 @@ export const Chat = (): JSX.Element => {
         <div className="flex-1 flex flex-col min-w-0">
           <div className="mb-3 sm:mb-4 flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <h1 className="text-white text-xl sm:text-2xl md:text-3xl font-bold mb-1 flex items-center gap-2 sm:gap-3">
+              <h1 className="text-foreground text-xl sm:text-2xl md:text-3xl font-bold mb-1 flex items-center gap-2 sm:gap-3">
                 <button
                   onClick={() => setShowHistory(!showHistory)}
                   className="md:hidden p-1.5 sm:p-2 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
                 >
-                  <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
+                  <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                 </button>
-                <Sparkles className="w-5 h-5 sm:w-6 sm:w-7 text-purple-400 flex-shrink-0" />
+                <Sparkles className="w-5 h-5 sm:w-6 sm:w-7 text-primary flex-shrink-0" />
                 <span className="truncate">{activeConv?.title || t('chatHeader')}</span>
               </h1>
-              <p className="text-gray-400 text-xs sm:text-sm ml-8 sm:ml-11 md:ml-0">{t('chatTagline')}</p>
+              <p className="text-muted-foreground text-xs sm:text-sm ml-8 sm:ml-11 md:ml-0">{t('chatTagline')}</p>
             </div>
           </div>
 
-          <div className="flex-1 backdrop-blur-xl bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 border border-white/10 rounded-[16px] sm:rounded-[20px] md:rounded-[28px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col">
+          <div className="flex-1 backdrop-blur-xl bg-card/95 border border-border rounded-[16px] sm:rounded-[20px] md:rounded-[28px] shadow-lg overflow-hidden flex flex-col">
             <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
               {messages.map((message) => (
                 <div
@@ -268,8 +268,8 @@ export const Chat = (): JSX.Element => {
                   <div
                     className={`max-w-[85%] sm:max-w-[80%] md:max-w-[75%] rounded-2xl p-0 overflow-hidden ${
                       message.sender === "user"
-                        ? "bg-gradient-to-br from-purple-600 to-purple-700 text-white"
-                        : "bg-[#2a2d4a] text-gray-100"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-foreground"
                     }`}
                   >
                     <pre className="whitespace-pre-wrap break-words text-xs sm:text-sm leading-relaxed p-3 sm:p-4 max-h-[40vh] sm:max-h-[50vh] overflow-auto font-mono">{message.text}</pre>
@@ -283,7 +283,7 @@ export const Chat = (): JSX.Element => {
               ))}
             </div>
 
-            <div className="p-3 sm:p-4 md:p-6 border-t border-white/10">
+            <div className="p-3 sm:p-4 md:p-6 border-t border-border">
               <div className="flex gap-2 sm:gap-3">
                 <input
                   type="text"
@@ -291,7 +291,7 @@ export const Chat = (): JSX.Element => {
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder={t('chatPlaceholder')}
-                  className="flex-1 bg-[#2a2d4a] text-white rounded-full px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 outline-none border border-white/10 focus:border-purple-500 transition-colors text-sm md:text-base"
+                  className="flex-1 bg-input text-foreground rounded-full px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 outline-none border border-border focus:border-primary transition-colors text-sm md:text-base"
                 />
                 <button
                   onClick={handleSend}
@@ -301,7 +301,7 @@ export const Chat = (): JSX.Element => {
                 </button>
               </div>
               {!hideUsage && (
-                <div className="mt-2 text-xs text-gray-400">{usageText}</div>
+                <div className="mt-2 text-xs text-muted-foreground">{usageText}</div>
               )}
             </div>
           </div>
