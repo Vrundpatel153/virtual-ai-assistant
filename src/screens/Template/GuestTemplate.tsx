@@ -102,17 +102,6 @@ export const GuestTemplate = (): JSX.Element => {
 
             {/* Column 2 - Center (Hero card + 2 cards below) */}
             <div className="relative flex flex-col gap-3 sm:gap-4 md:gap-5 order-1 lg:order-2">
-              {/* 3D Model - Visible on mobile as a card, overlaid on desktop */}
-              <div className="lg:hidden h-[280px] sm:h-[320px] md:h-[360px] rounded-[16px] sm:rounded-[20px] md:rounded-[24px] overflow-hidden relative bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
-                <ModelCanvas
-                  src="/models/base_basic_pbr.glb"
-                  autoRotate={true}
-                  enableZoom={true}
-                  enableRotate={true}
-                  enablePan={false}
-                />
-                <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.1),transparent_60%)]" />
-              </div>
               
               {/* Middle circle 3D canvas (shows through card cutouts) - Desktop only */}
               <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 lg:top-[146px] xl:top-[176px] lg:w-[280px] lg:h-[280px] xl:w-[340px] xl:h-[340px] rounded-full overflow-hidden z-30 [clip-path:circle(50%_at_50%_50%)]">
@@ -133,7 +122,7 @@ export const GuestTemplate = (): JSX.Element => {
                 <div className="pointer-events-none absolute inset-[-12%] rounded-full bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15),transparent_60%)]" />
               </div>
               {/* Hero Card - AI Assistant Hub */}
-              <Card className="bg-gradient-to-br from-[#8b5cf6] via-[#a855f7] to-[#c084fc] border-white/20 rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[220px] sm:h-[250px] md:h-[280px] lg:h-[340px] overflow-hidden relative z-10 shadow-[0_20px_60px_rgba(139,92,246,0.6),0_0_80px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_25px_80px_rgba(139,92,246,0.8),0_0_100px_rgba(168,85,247,0.4)] transition-all duration-300 lg:mask-cut-top-arc [--cut-r:140px] xl:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-y:6px]">
+              <Card className="bg-gradient-to-br from-[#8b5cf6] via-[#a855f7] to-[#c084fc] border-white/20 rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[480px] sm:h-[520px] md:h-[560px] lg:h-[340px] overflow-hidden relative z-10 shadow-[0_20px_60px_rgba(139,92,246,0.6),0_0_80px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_25px_80px_rgba(139,92,246,0.8),0_0_100px_rgba(168,85,247,0.4)] transition-all duration-300 lg:mask-cut-top-arc [--cut-r:140px] xl:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-y:6px]">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.3),transparent_50%)]" />
                 <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.2)_0%,transparent_60%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.15),transparent_50%)]" />
@@ -144,10 +133,21 @@ export const GuestTemplate = (): JSX.Element => {
                     <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
                     <span className="text-white font-semibold text-[10px] sm:text-xs md:text-xs lg:text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">{t('aiAssistantLabel')}</span>
                   </div>
-                  <h1 className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-1.5 sm:mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
+                  <h1 className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-1.5 sm:mb-2 lg:mb-0 drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
                     {t('subtitle')}
                   </h1>
                   
+                  {/* 3D Model - Inside hero card on mobile only */}
+                  <div className="lg:hidden w-full flex-1 mt-3 sm:mt-4 rounded-[12px] sm:rounded-[16px] overflow-hidden relative">
+                    <ModelCanvas
+                      src="/models/base_basic_pbr.glb"
+                      autoRotate={true}
+                      enableZoom={true}
+                      enableRotate={true}
+                      enablePan={false}
+                    />
+                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1),transparent_60%)]" />
+                  </div>
                 </CardContent>
 
               </Card>
