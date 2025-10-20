@@ -102,7 +102,19 @@ export const GuestTemplate = (): JSX.Element => {
 
             {/* Column 2 - Center (Hero card + 2 cards below) */}
             <div className="relative flex flex-col gap-3 sm:gap-4 md:gap-5 order-1 lg:order-2">
-              {/* Middle circle 3D canvas (shows through card cutouts) - Hidden on mobile/tablet */}
+              {/* 3D Model - Visible on mobile as a card, overlaid on desktop */}
+              <div className="lg:hidden h-[280px] sm:h-[320px] md:h-[360px] rounded-[16px] sm:rounded-[20px] md:rounded-[24px] overflow-hidden relative bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+                <ModelCanvas
+                  src="/models/base_basic_pbr.glb"
+                  autoRotate={true}
+                  enableZoom={true}
+                  enableRotate={true}
+                  enablePan={false}
+                />
+                <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.1),transparent_60%)]" />
+              </div>
+              
+              {/* Middle circle 3D canvas (shows through card cutouts) - Desktop only */}
               <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 lg:top-[146px] xl:top-[176px] lg:w-[280px] lg:h-[280px] xl:w-[340px] xl:h-[340px] rounded-full overflow-hidden z-30 [clip-path:circle(50%_at_50%_50%)]">
                 <ModelCanvas
                   src="/models/base_basic_pbr.glb"

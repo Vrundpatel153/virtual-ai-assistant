@@ -90,15 +90,15 @@ export const Navbar = (): JSX.Element => {
           : "bg-transparent"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
-  <div className="flex items-center justify-between h-16 md:h-20 perspective-800">
-          <div onClick={() => navigate("/")} className="flex items-center gap-3 md:gap-4 cursor-pointer group lift-3d">
-            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#a855f7] flex items-center justify-center shadow-lg shadow-purple-500/30 relative overflow-hidden group-hover:scale-105 transition-transform">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+        <div className="flex items-center justify-between h-14 sm:h-16 md:h-20 perspective-800">
+          <div onClick={() => navigate("/")} className="flex items-center gap-2 sm:gap-3 cursor-pointer group lift-3d">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#a855f7] flex items-center justify-center shadow-lg shadow-purple-500/30 relative overflow-hidden group-hover:scale-105 transition-transform">
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <Wrench className="w-5 h-5 md:w-5 md:h-5 text-white relative z-10" />
+              <Wrench className="w-4 h-4 sm:w-5 sm:h-5 text-white relative z-10" />
             </div>
             <div className="transition-transform">
-              <h1 className="text-white font-bold text-lg md:text-xl leading-tight">{t('appName')}</h1>
+              <h1 className="text-white font-bold text-sm sm:text-base md:text-lg lg:text-xl leading-tight">{t('appName')}</h1>
             </div>
           </div>
 
@@ -120,12 +120,12 @@ export const Navbar = (): JSX.Element => {
             ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-3 perspective-800">
+          <div className="hidden md:flex items-center gap-2 lg:gap-3 perspective-800">
             <ThemeToggle />
             {currentUser && (
               <button
                 onClick={() => navigate("/notifications")}
-                className="relative w-9 h-9 md:w-10 md:h-10 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:border-[#3d4266]/70 hover:shadow-lg hover:shadow-purple-500/20 lift-3d"
+                className="relative w-9 h-9 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:border-[#3d4266]/70 hover:shadow-lg hover:shadow-purple-500/20 lift-3d"
               >
                 <Bell className="w-4 h-4 md:w-5 md:h-5" />
                 {unreadCount > 0 && (
@@ -139,19 +139,19 @@ export const Navbar = (): JSX.Element => {
               <>
                 <button
                   onClick={() => navigate("/settings")}
-                  className="h-9 md:h-10 px-3 md:px-4 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 text-gray-300 hover:text-white transition-all duration-200 lift-3d"
+                  className="h-9 md:h-10 px-2.5 md:px-3 lg:px-4 rounded-lg md:rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 text-gray-300 hover:text-white transition-all duration-200 lift-3d text-xs md:text-sm"
                 >
                   {t('settings')}
                 </button>
                 <button
                   onClick={() => openAuth('signin')}
-                  className="h-9 md:h-10 px-3 md:px-4 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 text-gray-300 hover:text-white transition-all duration-200 lift-3d"
+                  className="h-9 md:h-10 px-2.5 md:px-3 lg:px-4 rounded-lg md:rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 text-gray-300 hover:text-white transition-all duration-200 lift-3d text-xs md:text-sm"
                 >
                   {t('signIn')}
                 </button>
                 <button
                   onClick={() => openAuth('signup')}
-                  className="h-9 md:h-10 px-3 md:px-4 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] text-white transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 lift-3d"
+                  className="h-9 md:h-10 px-2.5 md:px-3 lg:px-4 rounded-lg md:rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] text-white transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 lift-3d text-xs md:text-sm"
                 >
                   {t('signUp')}
                 </button>
@@ -160,19 +160,19 @@ export const Navbar = (): JSX.Element => {
               <>
                 <button
                   onClick={() => navigate("/settings")}
-                  className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:border-[#3d4266]/70 lift-3d"
+                  className="w-9 h-9 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-[#1e2139]/80 hover:bg-[#252844] border border-[#2d3256]/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 hover:border-[#3d4266]/70 lift-3d"
                 >
                   <Settings className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
                 <button
                   onClick={() => navigate("/profile")}
-                  className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] hover:from-[#6d28d9] hover:to-[#7c3aed] flex items-center justify-center text-white transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 lift-3d"
+                  className="w-9 h-9 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] hover:from-[#6d28d9] hover:to-[#7c3aed] flex items-center justify-center text-white transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 lift-3d"
                 >
-                  <span className="font-semibold">{currentUser.name.charAt(0).toUpperCase()}</span>
+                  <span className="font-semibold text-sm md:text-base">{currentUser.name.charAt(0).toUpperCase()}</span>
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 flex items-center justify-center text-red-400 hover:text-red-300 transition-all duration-200 lift-3d"
+                  className="w-9 h-9 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 flex items-center justify-center text-red-400 hover:text-red-300 transition-all duration-200 lift-3d"
                 >
                   <LogOut className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
@@ -182,9 +182,9 @@ export const Navbar = (): JSX.Element => {
 
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden w-9 h-9 rounded-xl bg-[#1e2139]/80 border border-[#2d3256]/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200"
+            className="md:hidden w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-[#1e2139]/80 border border-[#2d3256]/50 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200"
           >
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {isMobileMenuOpen ? <X className="w-4 h-4 sm:w-5 sm:h-5" /> : <Menu className="w-4 h-4 sm:w-5 sm:h-5" />}
           </button>
         </div>
 
