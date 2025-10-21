@@ -138,13 +138,19 @@ export const GuestTemplate = (): JSX.Element => {
                   </h1>
                   
                   {/* 3D Model - Inside hero card on mobile only */}
-                  <div className="lg:hidden w-full flex-1 min-h-[200px] mt-2 sm:mt-3 rounded-[12px] sm:rounded-[16px] overflow-hidden relative">
+                  <div className="lg:hidden w-full min-h-[300px] mt-2 sm:mt-3 rounded-[12px] sm:rounded-[16px] overflow-hidden relative" style={{ aspectRatio: '1 / 1.1' }}>
                     <ModelCanvas
                       src="/models/base_basic_pbr.glb"
                       autoRotate={true}
-                      enableZoom={true}
+                      className="absolute inset-0"
+                      rounded={false}
+                      fitMargin={1.0}
+                      viewMargin={1.2}
+                      scale={0.9}
+                      enableZoom={false}
                       enableRotate={true}
                       enablePan={false}
+                      offsetYRatio={-0.04}
                     />
                     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1),transparent_60%)]" />
                   </div>

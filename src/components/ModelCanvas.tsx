@@ -19,6 +19,7 @@ type ModelCanvasProps = {
   hoverMaxTiltDeg?: number; // max pitch (x-rotation) in degrees
   hoverMaxYawDeg?: number; // max yaw (y-rotation) in degrees
   hoverSmoothing?: number; // interpolation factor per frame (0..1)
+  rounded?: boolean; // keep legacy circular mask by default
 };
 
 const FittedModel = React.forwardRef<Group, { src: string; fit?: number; scale?: number; offsetYRatio?: number }>(({ src, fit = 1.0, scale = 1.0, offsetYRatio = 0 }, ref) => {
@@ -72,6 +73,8 @@ function FitCamera({ targetRef, margin = 1.0 }: { targetRef: React.RefObject<Gro
     const distHeight = halfHeight / Math.tan(fov / 2);
     const distWidth = (halfWidth / Math.tan(fov / 2)) / aspect;
     const dist = Math.max(distHeight, distWidth, 0.1);
+
+    // Legacy behavior: camera at origin-facing Z, look at origin
     persp.position.set(0, 0, dist);
     persp.near = Math.max(dist / 100, 0.01);
     persp.far = dist * 100;
@@ -154,11 +157,12 @@ export const ModelCanvas: React.FC<ModelCanvasProps> = ({
   hoverMaxTiltDeg = 14,
   hoverMaxYawDeg = 22,
   hoverSmoothing = 0.16,
+  rounded = true,
 }) => {
-  // Maintain a circular mask using Tailwind utility classes. The Canvas fills the container.
+  // Restore legacy: circular mask by default, with an opt-out for mobile placements
   const containerClasses = useMemo(
-    () => `relative rounded-full overflow-hidden ${className}`,
-    [className]
+    () => `relative ${rounded ? 'rounded-full overflow-hidden' : 'w-full h-full'} ${className}`,
+    [rounded, className]
   );
   const contentRef = React.useRef<Group>(null);
   const [reduceLoad, setReduceLoad] = useState<boolean>(settingsManager.get().reduceLoad ?? false);
