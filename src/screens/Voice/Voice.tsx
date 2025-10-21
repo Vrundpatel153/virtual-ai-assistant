@@ -113,29 +113,29 @@ export const Voice = (): JSX.Element => {
 
   return (
     <>
-    <div className="bg-[#0a0b1e] w-full min-h-screen flex flex-col">
+    <div className="bg-background w-full min-h-screen flex flex-col">
       <Navbar />
       <div className="flex-1 pt-20 md:pt-24 pb-6 px-4 md:px-6 flex gap-4 max-w-7xl mx-auto w-full">
         {/* Main Voice Area */}
         <div className="flex-1 flex flex-col min-w-0">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-white text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3">
+              <h1 className="text-foreground text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3">
                 <Mic className="w-8 h-8 text-orange-400" />
                 {t('voiceAssistantTitle')}
               </h1>
-              <p className="text-gray-400 text-sm md:text-base">{t('voiceAssistantSubtitle')}</p>
+              <p className="text-muted-foreground text-sm md:text-base">{t('voiceAssistantSubtitle')}</p>
             </div>
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl border border-white/10 hover:border-white/20 transition-all duration-300 flex items-center gap-2"
+              className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-xl border border-border hover:border-border/60 transition-all duration-300 flex items-center gap-2"
             >
               <History className="w-4 h-4" />
               <span className="hidden md:inline">{t('history')}</span>
             </button>
           </div>
 
-          <div className="flex-1 backdrop-blur-xl bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 border border-white/10 rounded-[20px] md:rounded-[28px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col items-center justify-center p-6 md:p-12">
+          <div className="flex-1 backdrop-blur-xl bg-card border border-border rounded-[20px] md:rounded-[28px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col items-center justify-center p-6 md:p-12">
             <div className="relative mb-12">
               <div
                 className={`w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shadow-[0_0_60px_rgba(251,146,60,0.6)] transition-all duration-300 ${
@@ -176,16 +176,16 @@ export const Voice = (): JSX.Element => {
             </button>
 
             {transcript.length > 0 && (
-              <div className="w-full max-w-2xl backdrop-blur-xl bg-[#2a2d4a]/50 border border-white/10 rounded-2xl p-4 md:p-6">
+              <div className="w-full max-w-2xl backdrop-blur-xl bg-muted border border-border rounded-2xl p-4 md:p-6">
                 <div className="flex items-center gap-2 mb-3">
                   <Volume2 className="w-5 h-5 text-purple-400" />
-                  <h3 className="text-white font-semibold">{t('transcript')}</h3>
+                  <h3 className="text-foreground font-semibold">{t('transcript')}</h3>
                 </div>
                 <div className="space-y-3">
                   {recognizedText && (
-                    <div className="rounded-lg bg-white/5 border border-white/10 overflow-hidden">
-                      <div className="px-3 pt-3 text-xs uppercase tracking-wide text-gray-400">{t('recognized')}</div>
-                      <pre className="whitespace-pre-wrap break-words text-xs md:text-sm leading-relaxed p-3 text-gray-200 font-mono max-h-[40vh] overflow-auto">{recognizedText}</pre>
+                    <div className="rounded-lg bg-secondary border border-border overflow-hidden">
+                      <div className="px-3 pt-3 text-xs uppercase tracking-wide text-muted-foreground">{t('recognized')}</div>
+                      <pre className="whitespace-pre-wrap break-words text-xs md:text-sm leading-relaxed p-3 text-foreground font-mono max-h-[40vh] overflow-auto">{recognizedText}</pre>
                       <div className="px-3 pb-3">
                         <div className="mt-2 h-2 w-full bg-white/10 rounded-full overflow-hidden">
                           <div className={`h-full bg-gradient-to-r from-orange-400 to-orange-500 ${state === 'listening' ? 'animate-pulse' : ''}`} style={{width: '60%'}} />
@@ -194,9 +194,9 @@ export const Voice = (): JSX.Element => {
                     </div>
                   )}
                   {assistantReply && (
-                    <div className="rounded-lg bg-white/5 border border-white/10 overflow-hidden">
-                      <div className="px-3 pt-3 text-xs uppercase tracking-wide text-gray-400">{t('assistant')}</div>
-                      <pre className="whitespace-pre-wrap break-words text-xs md:text-sm leading-relaxed p-3 text-gray-200 font-mono max-h-[40vh] overflow-auto">{assistantReply}</pre>
+                    <div className="rounded-lg bg-secondary border border-border overflow-hidden">
+                      <div className="px-3 pt-3 text-xs uppercase tracking-wide text-muted-foreground">{t('assistant')}</div>
+                      <pre className="whitespace-pre-wrap break-words text-xs md:text-sm leading-relaxed p-3 text-foreground font-mono max-h-[40vh] overflow-auto">{assistantReply}</pre>
                       <div className="px-3 pb-3">
                         <div className="mt-2 flex items-center gap-2">
                           <span className="inline-block w-2 h-2 rounded-full bg-purple-400 animate-bounce [animation-delay:0ms]" />
@@ -207,7 +207,7 @@ export const Voice = (): JSX.Element => {
                     </div>
                   )}
                   {transcript.map((text, index) => (
-                    <p key={index} className="text-gray-300 text-sm md:text-base">
+                    <p key={index} className="text-foreground text-sm md:text-base">
                       {text}
                     </p>
                   ))}
@@ -220,9 +220,9 @@ export const Voice = (): JSX.Element => {
         {/* History Sidebar */}
         {showHistory && (
           <div className="w-full md:w-96 flex-shrink-0">
-            <div className="backdrop-blur-xl bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 border border-white/10 rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] h-full overflow-hidden flex flex-col">
-              <div className="p-4 border-b border-white/10">
-                <h2 className="text-white text-lg font-bold flex items-center gap-2">
+            <div className="backdrop-blur-xl bg-card border border-border rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] h-full overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-border">
+                <h2 className="text-foreground text-lg font-bold flex items-center gap-2">
                   <History className="w-5 h-5 text-orange-400" />
                   {t('history')}
                 </h2>
@@ -230,15 +230,15 @@ export const Voice = (): JSX.Element => {
               
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
                 {history.length === 0 ? (
-                  <p className="text-gray-400 text-sm text-center py-8">{t('noRecordingsYet')}</p>
+                  <p className="text-muted-foreground text-sm text-center py-8">{t('noRecordingsYet')}</p>
                 ) : (
                   history.map((record) => (
                     <div
                       key={record.id}
-                      className="group p-4 rounded-xl bg-[#2a2d4a]/50 border border-white/5 hover:bg-[#2a2d4a] hover:border-white/10 transition-all"
+                      className="group p-4 rounded-xl bg-muted border border-border hover:bg-muted/80 hover:border-border/60 transition-all"
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Clock className="w-3 h-3" />
                           {record.timestamp.toLocaleString()}
                         </div>
@@ -249,7 +249,7 @@ export const Voice = (): JSX.Element => {
                           <Trash2 className="w-4 h-4 text-red-400" />
                         </button>
                       </div>
-                      <p className="text-gray-300 text-sm">{record.transcript}</p>
+                      <p className="text-foreground text-sm">{record.transcript}</p>
                     </div>
                   ))
                 )}
