@@ -34,10 +34,10 @@ export const Template = (): JSX.Element => {
     return () => clearInterval(id);
   }, []);
   const cardBaseClasses =
-    "backdrop-blur-xl bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_0_80px_rgba(139,92,246,0.1),inset_0_1px_0_rgba(255,255,255,0.1)] hover:shadow-[0_8px_48px_rgba(139,92,246,0.3),0_0_100px_rgba(139,92,246,0.2)] transition-all duration-300 hover:border-white/20 cursor-pointer";
+    "backdrop-blur-xl bg-gradient-to-br from-card/95 to-card/90 border border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:border-border/60 cursor-pointer";
 
   return (
-    <div className="bg-[#0a0b1e] w-full min-h-screen">
+    <div className="bg-background w-full min-h-screen">
       <Navbar />
       <div className="pt-16 sm:pt-20 md:pt-28 lg:pt-32 pb-6 sm:pb-8 md:pb-10 lg:pb-12 px-3 sm:px-4 md:px-6 flex items-center justify-center">
         <div className="relative w-full max-w-[1400px]">
@@ -49,21 +49,19 @@ export const Template = (): JSX.Element => {
                 onClick={() => gate('/chat')}
                 className={`${cardBaseClasses} rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[220px] sm:h-[250px] md:h-[280px] lg:h-[340px] overflow-hidden relative`}
               >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(139,92,246,0.15),transparent_50%)]" />
-                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.05)_0%,transparent_50%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.08),transparent_60%)]" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
                 <CardContent className="p-4 sm:p-5 md:p-6 lg:p-8 h-full relative z-10 flex flex-col justify-between">
                   <div>
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#c084fc] flex items-center justify-center mb-3 sm:mb-4 md:mb-5 lg:mb-6 shadow-lg shadow-purple-500/40 border border-white/20">
-                      <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 lg:w-6 lg:h-6 text-white" />
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-3 sm:mb-4 md:mb-5 lg:mb-6 shadow-lg border border-primary/20">
+                      <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 lg:w-6 lg:h-6 text-primary-foreground" />
                     </div>
-                    <h3 className="text-white text-lg sm:text-xl md:text-xl lg:text-2xl font-bold mb-1.5 sm:mb-2 leading-tight whitespace-pre-line">
+                    <h3 className="text-foreground text-lg sm:text-xl md:text-xl lg:text-2xl font-bold mb-1.5 sm:mb-2 leading-tight whitespace-pre-line">
                       {t('intelligentChatAssistant')}
                     </h3>
                   </div>
-                  <div className="text-gray-300 text-[11px] sm:text-xs md:text-sm">
-                    <div className="font-semibold text-white mb-0.5 sm:mb-1 drop-shadow-sm">{t('realtimeResponses')}</div>
-                    <div className="text-gray-400">{t('contextAwareConversations')}</div>
+                  <div className="text-muted-foreground text-[11px] sm:text-xs md:text-sm">
+                    <div className="font-semibold text-foreground mb-0.5 sm:mb-1 drop-shadow-sm">{t('realtimeResponses')}</div>
+                    <div className="text-muted-foreground">{t('contextAwareConversations')}</div>
                   </div>
                 </CardContent>
               </Card>
@@ -72,15 +70,14 @@ export const Template = (): JSX.Element => {
               <Card
                 className={`${cardBaseClasses} rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[140px] sm:h-[150px] md:h-[160px] lg:h-[180px] overflow-hidden relative`}
               >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(139,92,246,0.12),transparent_60%)]" />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05)_0%,transparent_50%)]" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
                 <CardContent className="p-4 sm:p-5 md:p-6 lg:p-8 h-full relative z-10 flex flex-col justify-between">
-                  <div className="text-[#f59e0b] text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-bold drop-shadow-[0_2px_8px_rgba(245,158,11,0.3)]">{totalChats}</div>
+                  <div className="text-accent text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-bold">{totalChats}</div>
                   <div>
-                    <div className="text-gray-300 text-[11px] sm:text-xs md:text-sm mb-2 sm:mb-2.5 md:mb-3">{t('totalChatsLower')}</div>
+                    <div className="text-muted-foreground text-[11px] sm:text-xs md:text-sm mb-2 sm:mb-2.5 md:mb-3">{t('totalChatsLower')}</div>
                     <div className="flex gap-1.5 sm:gap-2">
-                      <div className="flex-1 h-1.5 sm:h-2 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 shadow-lg shadow-orange-500/30" />
-                      <div className="flex-1 h-1.5 sm:h-2 rounded-full bg-gradient-to-r from-purple-400 to-purple-600 opacity-80 shadow-lg shadow-purple-500/20" />
+                      <div className="flex-1 h-1.5 sm:h-2 rounded-full bg-gradient-to-r from-accent to-accent/60 shadow-lg" />
+                      <div className="flex-1 h-1.5 sm:h-2 rounded-full bg-gradient-to-r from-primary to-primary/80 opacity-80 shadow-lg" />
                     </div>
                   </div>
                 </CardContent>
@@ -91,10 +88,9 @@ export const Template = (): JSX.Element => {
                 onClick={() => gate('/chat')}
                 className={`${cardBaseClasses} rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[120px] sm:h-[130px] md:h-[140px] lg:h-[160px] overflow-hidden relative`}
               >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(139,92,246,0.12),transparent_60%)]" />
-                <div className="absolute inset-0 bg-[linear-gradient(225deg,rgba(255,255,255,0.05)_0%,transparent_50%)]" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
                 <CardContent className="p-4 sm:p-5 md:p-6 lg:p-8 h-full relative z-10 flex items-center justify-center">
-                  <button className="bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] hover:from-[#7c3aed] hover:to-[#9333ea] text-white px-5 sm:px-6 md:px-7 lg:px-8 py-2.5 sm:py-3 md:py-3.5 lg:py-4 rounded-full font-semibold text-sm sm:text-base md:text-base lg:text-lg flex items-center gap-2 md:gap-2.5 lg:gap-3 shadow-[0_8px_32px_rgba(139,92,246,0.4)] hover:shadow-[0_8px_48px_rgba(139,92,246,0.6)] transition-all duration-300 hover:scale-105 border border-white/20">
+                  <button className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground px-5 sm:px-6 md:px-7 lg:px-8 py-2.5 sm:py-3 md:py-3.5 lg:py-4 rounded-full font-semibold text-sm sm:text-base md:text-base lg:text-lg flex items-center gap-2 md:gap-2.5 lg:gap-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-primary/20">
                     <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-4.5 md:h-4.5 lg:w-5 lg:h-5" />
                     {t('startChat')}
                   </button>
@@ -123,18 +119,16 @@ export const Template = (): JSX.Element => {
                 <div className="pointer-events-none absolute inset-[-12%] rounded-full bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15),transparent_60%)]" />
               </div>
               {/* Hero Card - AI Assistant Hub */}
-              <Card className="bg-gradient-to-br from-[#8b5cf6] via-[#a855f7] to-[#c084fc] border-white/20 rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[220px] sm:h-[250px] md:h-[280px] lg:h-[340px] overflow-hidden relative z-10 shadow-[0_20px_60px_rgba(139,92,246,0.6),0_0_80px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_25px_80px_rgba(139,92,246,0.8),0_0_100px_rgba(168,85,247,0.4)] transition-all duration-300 lg:mask-cut-top-arc [--cut-r:140px] xl:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-y:6px]">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.3),transparent_50%)]" />
-                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.2)_0%,transparent_60%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.15),transparent_50%)]" />
-                <div className="absolute inset-0 opacity-30 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMC41Ii8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')]" />
+              <Card className="bg-gradient-to-br from-primary via-primary/90 to-primary/80 border-primary/20 rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[220px] sm:h-[250px] md:h-[280px] lg:h-[340px] overflow-hidden relative z-10 shadow-xl hover:shadow-2xl transition-all duration-300 lg:mask-cut-top-arc [--cut-r:140px] xl:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-y:6px]">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary-foreground/10 to-transparent" />
+                <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjAuNSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')]" />
 
                 <CardContent className="p-3 sm:p-4 md:p-5 lg:p-6 h-full relative z-10 flex flex-col items-center justify-start pt-3 sm:pt-4 md:pt-5 lg:pt-6 text-center">
-                  <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2 bg-white/20 backdrop-blur-sm px-2.5 sm:px-3 md:px-3.5 lg:px-4 py-1 sm:py-1.5 md:py-1.5 lg:py-2 rounded-full border border-white/30 shadow-lg">
-                    <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
-                    <span className="text-white font-semibold text-[10px] sm:text-xs md:text-xs lg:text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">{t('aiAssistantLabel')}</span>
+                  <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2 bg-primary-foreground/20 backdrop-blur-sm px-2.5 sm:px-3 md:px-3.5 lg:px-4 py-1 sm:py-1.5 md:py-1.5 lg:py-2 rounded-full border border-primary-foreground/30 shadow-lg">
+                    <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 text-primary-foreground" />
+                    <span className="text-primary-foreground font-semibold text-[10px] sm:text-xs md:text-xs lg:text-sm">{t('aiAssistantLabel')}</span>
                   </div>
-                  <h1 className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-1.5 sm:mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
+                  <h1 className="text-primary-foreground text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-1.5 sm:mb-2">
                     {t('subtitle')}
                   </h1>
                   
@@ -150,23 +144,22 @@ export const Template = (): JSX.Element => {
                   onClick={() => gate('/voice')}
                   className={`${cardBaseClasses} rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[220px] sm:h-[250px] md:h-[280px] lg:h-[359.5px] overflow-hidden relative z-10 lg:mask-cut-top-right-arc [--cut-r:140px] xl:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-x:10px] [--cut-offset-y:6px] [pointer-events:auto]`}
                 >
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(120,119,198,0.12),transparent_60%)]" />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(139,92,246,0.04)_0%,transparent_40%)]" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent" />
 
                   {/* Decorative sound waves */}
-                  <div className="absolute top-[30%] left-[20%] w-2 h-2 rounded-full bg-orange-400/60 animate-pulse" />
-                  <div className="absolute top-[45%] left-[25%] w-1.5 h-1.5 rounded-full bg-orange-400/40 animate-pulse" style={{ animationDelay: '0.2s' }} />
-                  <div className="absolute top-[60%] left-[22%] w-1.5 h-1.5 rounded-full bg-orange-400/40 animate-pulse" style={{ animationDelay: '0.4s' }} />
-                  <div className="absolute top-[30%] right-[20%] w-2 h-2 rounded-full bg-purple-400/60 animate-pulse" style={{ animationDelay: '0.1s' }} />
+                  <div className="absolute top-[30%] left-[20%] w-2 h-2 rounded-full bg-accent/60 animate-pulse" />
+                  <div className="absolute top-[45%] left-[25%] w-1.5 h-1.5 rounded-full bg-accent/40 animate-pulse" style={{ animationDelay: '0.2s' }} />
+                  <div className="absolute top-[60%] left-[22%] w-1.5 h-1.5 rounded-full bg-accent/40 animate-pulse" style={{ animationDelay: '0.4s' }} />
+                  <div className="absolute top-[30%] right-[20%] w-2 h-2 rounded-full bg-primary/60 animate-pulse" style={{ animationDelay: '0.1s' }} />
 
                   <CardContent className="p-4 sm:p-5 md:p-5 lg:p-6 h-full relative z-10 flex flex-col justify-between">
                     <div className="flex-1" />
                     <div>
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center mb-2.5 sm:mb-3 md:mb-3.5 lg:mb-4 shadow-lg shadow-orange-500/30">
-                        <Mic2 className="w-4 h-4 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 lg:w-6 lg:h-6 text-white" />
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded-full bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center mb-2.5 sm:mb-3 md:mb-3.5 lg:mb-4 shadow-lg">
+                        <Mic2 className="w-4 h-4 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 lg:w-6 lg:h-6 text-accent-foreground" />
                       </div>
-                      <h3 className="text-white text-base sm:text-lg md:text-lg lg:text-xl font-bold mb-1.5 sm:mb-2">{t('voiceCardTitle')}</h3>
-                      <p className="text-gray-400 text-[11px] sm:text-xs md:text-sm leading-relaxed">
+                      <h3 className="text-foreground text-base sm:text-lg md:text-lg lg:text-xl font-bold mb-1.5 sm:mb-2">{t('voiceCardTitle')}</h3>
+                      <p className="text-muted-foreground text-[11px] sm:text-xs md:text-sm leading-relaxed">
                         {t('voiceCardDesc')}
                       </p>
                     </div>
@@ -179,21 +172,20 @@ export const Template = (): JSX.Element => {
                   onClick={() => gate('/ai-tools')}
                   className={`${cardBaseClasses} rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[220px] sm:h-[250px] md:h-[280px] lg:h-[359.5px] overflow-hidden relative z-10 lg:mask-cut-top-left-arc [--cut-r:140px] xl:[--cut-r:170px] [--cut-pad:12px] [--cut-offset-x:10px] [--cut-offset-y:6px] [pointer-events:auto]`}
                 >
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(120,119,198,0.12),transparent_60%)]" />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(139,92,246,0.04)_0%,transparent_40%)]" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
 
                   {/* Decorative dots */}
-                  <div className="absolute top-[30%] left-[20%] w-1.5 h-1.5 rounded-full bg-purple-400/40" />
-                  <div className="absolute top-[35%] right-[25%] w-2 h-2 rounded-full bg-purple-400/60" />
+                  <div className="absolute top-[30%] left-[20%] w-1.5 h-1.5 rounded-full bg-primary/40" />
+                  <div className="absolute top-[35%] right-[25%] w-2 h-2 rounded-full bg-primary/60" />
 
                   <CardContent className="p-4 sm:p-5 md:p-5 lg:p-6 h-full relative z-10 flex flex-col justify-between">
                     <div className="flex-1" />
                     <div>
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded-full bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] flex items-center justify-center mb-2.5 sm:mb-3 md:mb-3.5 lg:mb-4 shadow-lg shadow-purple-500/30">
-                        <Wrench className="w-4 h-4 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 lg:w-6 lg:h-6 text-white" />
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-2.5 sm:mb-3 md:mb-3.5 lg:mb-4 shadow-lg">
+                        <Wrench className="w-4 h-4 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 lg:w-6 lg:h-6 text-primary-foreground" />
                       </div>
-                      <h3 className="text-white text-base sm:text-lg md:text-lg lg:text-xl font-bold mb-1.5 sm:mb-2">{t('aiToolsCardTitle')}</h3>
-                      <p className="text-gray-400 text-[11px] sm:text-xs md:text-sm leading-relaxed">
+                      <h3 className="text-foreground text-base sm:text-lg md:text-lg lg:text-xl font-bold mb-1.5 sm:mb-2">{t('aiToolsCardTitle')}</h3>
+                      <p className="text-muted-foreground text-[11px] sm:text-xs md:text-sm leading-relaxed">
                         {t('aiToolsCardDesc')}
                       </p>
                     </div>
@@ -209,10 +201,10 @@ export const Template = (): JSX.Element => {
               <Card
                 className={`${cardBaseClasses} rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[120px] sm:h-[130px] md:h-[140px] lg:h-[160px] overflow-hidden relative`}
               >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(120,119,198,0.08),transparent_60%)]" />
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent" />
                 <CardContent className="p-4 sm:p-5 md:p-6 lg:p-8 h-full relative z-10 flex items-center justify-center">
-                  <div className="w-12 h-12 sm:w-13 sm:h-13 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/40 rotate-12 hover:rotate-0 transition-transform duration-300">
-                    <Brain className="w-6 h-6 sm:w-6.5 sm:h-6.5 md:w-7 md:h-7 lg:w-8 lg:h-8 text-white" />
+                  <div className="w-12 h-12 sm:w-13 sm:h-13 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-2xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-lg rotate-12 hover:rotate-0 transition-transform duration-300">
+                    <Brain className="w-6 h-6 sm:w-6.5 sm:h-6.5 md:w-7 md:h-7 lg:w-8 lg:h-8 text-accent-foreground" />
                   </div>
                 </CardContent>
               </Card>
@@ -221,10 +213,10 @@ export const Template = (): JSX.Element => {
               <Card
                 className={`${cardBaseClasses} rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[140px] sm:h-[150px] md:h-[160px] lg:h-[180px] overflow-hidden relative`}
               >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(120,119,198,0.08),transparent_60%)]" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
                 <CardContent className="p-4 sm:p-5 md:p-6 lg:p-8 h-full relative z-10 flex flex-col items-center justify-center text-center">
-                  <div className="text-white text-xl sm:text-2xl md:text-2xl lg:text-3xl font-bold mb-0.5 sm:mb-1">{sessionCount} {t('sessionsLabel')}</div>
-                  <div className="flex items-center gap-1.5 sm:gap-2 text-purple-300">
+                  <div className="text-foreground text-xl sm:text-2xl md:text-2xl lg:text-3xl font-bold mb-0.5 sm:mb-1">{sessionCount} {t('sessionsLabel')}</div>
+                  <div className="flex items-center gap-1.5 sm:gap-2 text-primary">
                     <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[11px] sm:text-xs md:text-sm">{totalHours} {t('hoursActive')}</span>
                   </div>
@@ -235,12 +227,11 @@ export const Template = (): JSX.Element => {
               <Card
                 className={`${cardBaseClasses} rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] h-[220px] sm:h-[250px] md:h-[280px] lg:h-[340px] overflow-hidden relative`}
               >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(120,119,198,0.1),transparent_50%)]" />
-                <div className="absolute inset-0 bg-[linear-gradient(225deg,rgba(139,92,246,0.03)_0%,transparent_50%)]" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
                 <CardContent className="p-4 sm:p-5 md:p-5 lg:p-6 h-full relative z-10 flex flex-col justify-between">
                   <div>
-                    <h3 className="text-white text-base sm:text-lg md:text-lg lg:text-xl font-bold mb-1.5 sm:mb-2">{t('analyticsInsights')}</h3>
-                    <p className="text-gray-400 text-[11px] sm:text-xs md:text-sm leading-relaxed">{t('trackUsage')}</p>
+                    <h3 className="text-foreground text-base sm:text-lg md:text-lg lg:text-xl font-bold mb-1.5 sm:mb-2">{t('analyticsInsights')}</h3>
+                    <p className="text-muted-foreground text-[11px] sm:text-xs md:text-sm leading-relaxed">{t('trackUsage')}</p>
                   </div>
 
                   {/* Interactive elements visualization */}

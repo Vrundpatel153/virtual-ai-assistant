@@ -32,10 +32,10 @@ export const GuestTemplate = (): JSX.Element => {
     return () => clearInterval(id);
   }, []);
   const cardBaseClasses =
-    "backdrop-blur-xl bg-gradient-to-br from-[#1e2139]/95 to-[#252844]/90 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_0_80px_rgba(139,92,246,0.1),inset_0_1px_0_rgba(255,255,255,0.1)] hover:shadow-[0_8px_48px_rgba(139,92,246,0.3),0_0_100px_rgba(139,92,246,0.2)] transition-all duration-300 hover:border-white/20 cursor-pointer";
+    "backdrop-blur-xl bg-gradient-to-br from-card/95 to-card/90 border border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:border-border/60 cursor-pointer";
 
   return (
-    <div className="bg-[#0a0b1e] w-full min-h-screen">
+    <div className="bg-background w-full min-h-screen">
       <Navbar />
       <div className="pt-16 sm:pt-20 md:pt-28 lg:pt-32 pb-6 sm:pb-8 md:pb-10 lg:pb-12 px-3 sm:px-4 md:px-6 flex items-center justify-center">
         <div className="relative w-full max-w-[1400px]">

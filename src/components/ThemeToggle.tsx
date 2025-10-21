@@ -13,6 +13,11 @@ export const ThemeToggle = ({ className = "" }: ThemeToggleProps): JSX.Element =
 
   useEffect(() => {
     const root = document.documentElement;
+    
+    // Add transition class before theme change
+    root.style.setProperty('transition', 'background-color 0.5s ease, color 0.5s ease');
+    document.body.style.setProperty('transition', 'background-color 0.5s ease, color 0.5s ease');
+    
     if (isDark) {
       root.classList.add("dark");
       localStorage.setItem("theme", "dark");
@@ -20,6 +25,14 @@ export const ThemeToggle = ({ className = "" }: ThemeToggleProps): JSX.Element =
       root.classList.remove("dark");
       localStorage.setItem("theme", "light");
     }
+    
+    // Remove transition after theme change completes
+    const timer = setTimeout(() => {
+      root.style.removeProperty('transition');
+      document.body.style.removeProperty('transition');
+    }, 500);
+    
+    return () => clearTimeout(timer);
   }, [isDark]);
 
   const handleToggle = () => {

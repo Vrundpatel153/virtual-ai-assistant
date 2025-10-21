@@ -262,6 +262,12 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  * {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-timing-function: ease;
+    transition-duration: 0.5s;
+  }
 }
 
 /* Custom cursor: hide system cursor only when .ai-cursor-hide-system is on <html> */
