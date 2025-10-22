@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Navbar } from "../../components/Navbar";
-import { Mic, Square, Volume2, Activity, Clock, Trash2, History } from "lucide-react";
+import { Mic, Square, Volume2, Activity, Clock, Trash2, History, AlertCircle, Loader2 } from "lucide-react";
 import { voiceHistoryManager, tokenManager, settingsManager } from "../../lib/historyManager";
 import { useGlobalLoading } from "../../components/LoadingProvider";
 import { Modal } from "../../components/Modal";
@@ -11,7 +11,7 @@ import { t, useI18n } from "../../lib/i18n";
 import { useToast } from "../../components/ToastProvider";
 
 export const Voice = (): JSX.Element => {
-  type VoiceState = 'idle' | 'listening' | 'processing' | 'responding';
+  type VoiceState = 'idle' | 'listening' | 'processing' | 'responding' | 'error';
   useI18n();
   const [state, setState] = useState<VoiceState>('idle');
   const [transcript, setTranscript] = useState<string[]>([]);
@@ -21,33 +21,124 @@ export const Voice = (): JSX.Element => {
   const { setLoading } = useGlobalLoading();
   const [recognizedText, setRecognizedText] = useState<string>("");
   const [assistantReply, setAssistantReply] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [micPermission, setMicPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
   const asr = useASR();
   const { showToast } = useToast();
+  const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isProcessingRef = useRef(false);
 
+  // Check microphone permission on mount
+  useEffect(() => {
+    const checkMicPermission = async () => {
+      try {
+        const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+        setMicPermission(result.state as 'granted' | 'denied' | 'prompt');
+        
+        result.addEventListener('change', () => {
+          setMicPermission(result.state as 'granted' | 'denied' | 'prompt');
+        });
+      } catch (error) {
+        console.log('Permission API not available, will request on first use');
+      }
+    };
+    
+    checkMicPermission();
+  }, []);
+
+  // Update history when transcript changes
   useEffect(() => {
     setHistory(voiceHistoryManager.getAllRecords());
   }, [transcript]);
 
-  const handleToggleRecording = () => {
-    if (state === 'idle') {
-      if (!isASRAvailable()) {
-        setAssistantReply(t('assistant'));
-        return;
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
       }
-      setAssistantReply("");
-      setRecognizedText("");
-      setState('listening');
-      const lang = settingsManager.get().language === 'hi' ? 'hi-IN' : 'en-US';
-      startListening(lang);
-    } else {
-      // Manual stop if required
       stopListening();
       stopSpeaking();
+    };
+  }, []);
+
+  const handleToggleRecording = useCallback(async () => {
+    if (state === 'idle') {
+      // Check browser support
+      if (!isASRAvailable()) {
+        setErrorMessage('Voice recognition is not supported in your browser. Please use Chrome, Edge, or Safari.');
+        setState('error');
+        showToast({
+          variant: 'error',
+          title: 'Not Supported',
+          description: 'Voice recognition is not available in this browser.'
+        });
+        return;
+      }
+
+      // Request microphone permission
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        setMicPermission('granted');
+      } catch (error) {
+        setMicPermission('denied');
+        setErrorMessage('Microphone access denied. Please grant permission to use voice features.');
+        setState('error');
+        showToast({
+          variant: 'error',
+          title: 'Permission Denied',
+          description: 'Please allow microphone access to use voice assistant.'
+        });
+        return;
+      }
+
+      // Clear previous state
+      setAssistantReply("");
+      setRecognizedText("");
+      setErrorMessage("");
+      setState('listening');
+      
+      const lang = settingsManager.get().language === 'hi' ? 'hi-IN' : 'en-US';
+      
+      try {
+        await startListening(lang);
+        
+        // Set safety timeout in case listening doesn't stop automatically
+        if (processingTimeoutRef.current) {
+          clearTimeout(processingTimeoutRef.current);
+        }
+        processingTimeoutRef.current = setTimeout(() => {
+          stopListening();
+          showToast({
+            variant: 'info',
+            title: 'Timeout',
+            description: 'Listening timed out. Please try again.'
+          });
+        }, 30000); // 30 second timeout
+        
+      } catch (error) {
+        console.error('Error starting recording:', error);
+        setErrorMessage('Failed to start recording. Please try again.');
+        setState('error');
+        showToast({
+          variant: 'error',
+          title: 'Recording Failed',
+          description: 'Could not start voice recording.'
+        });
+      }
+    } else {
+      // Manual stop
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
+      stopListening();
+      stopSpeaking();
+      isProcessingRef.current = false;
       setState('idle');
     }
-  };
+  }, [state, showToast]);
 
-  // When ASR transcript updates and we leave listening, process it
+  // Update recognized text as user speaks (interim results)
   useEffect(() => {
     if (!asr.transcript) return;
     setRecognizedText(asr.transcript);
@@ -55,53 +146,117 @@ export const Voice = (): JSX.Element => {
 
   // Auto-detect end of speech: when ASR stops listening while we are in listening state, move to processing
   useEffect(() => {
-    if (state === 'listening' && asr.listening === false) {
+    if (state === 'listening' && asr.listening === false && asr.transcript) {
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
       setState('processing');
     }
-  }, [asr.listening, state]);
+  }, [asr.listening, asr.transcript, state]);
 
-  // When we enter processing state, handle the utterance
+  // Process the recognized text when entering processing state
   useEffect(() => {
-    if (state !== 'processing') return;
+    if (state !== 'processing' || isProcessingRef.current) return;
+    
+    isProcessingRef.current = true;
     const text = (asr.transcript || recognizedText || '').trim();
+    
     if (!text) {
       setState('idle');
+      isProcessingRef.current = false;
+      showToast({
+        variant: 'info',
+        title: 'No Speech Detected',
+        description: 'Please try speaking again.'
+      });
       return;
     }
+
+    // Add user message to transcript
     setTranscript((prev) => [...prev, `You: ${text}`]);
     voiceHistoryManager.addRecord(text);
+    
+    // Reset ASR transcript for next recording
+    asr.resetTranscript();
+
+    // Try command handling first
     const cmd = tryHandleMultiCommand(text);
     if (cmd.handled && cmd.aiResponse) {
       setAssistantReply(cmd.aiResponse);
-      setTranscript((prev) => [...prev, `(Assistant): ${cmd.aiResponse}`]);
+      setTranscript((prev) => [...prev, `Assistant: ${cmd.aiResponse}`]);
       setState('responding');
-      speak(cmd.aiResponse).finally(() => setState('idle'));
+      speak(cmd.aiResponse)
+        .catch((error) => {
+          console.error('Speech synthesis error:', error);
+          showToast({
+            variant: 'error',
+            title: 'Speech Error',
+            description: 'Could not speak the response.'
+          });
+        })
+        .finally(() => {
+          setState('idle');
+          isProcessingRef.current = false;
+        });
       return;
     }
-    // Fallback to AI model (token-gated), but avoid call if no API key; voice should work like chat with local-only
-    const estTokens = Math.max(1, Math.ceil(text.length / 4));
+
+    // Check for API key
     const hasKey = (settingsManager.get().apiKey || '').trim().length > 0;
     if (!hasKey) {
-      const reply = 'This request requires an API key for an AI response. Local automations ran if available.';
+      const reply = 'AI features require an API key. Please add one in Settings, or I can only run local commands.';
       setAssistantReply(reply);
-      setTranscript((prev) => [...prev, `(Assistant): ${reply}`]);
+      setTranscript((prev) => [...prev, `Assistant: ${reply}`]);
       setState('responding');
-      speak(reply).finally(() => setState('idle'));
+      speak(reply)
+        .catch((error) => console.error('Speech error:', error))
+        .finally(() => {
+          setState('idle');
+          isProcessingRef.current = false;
+        });
       return;
     }
+
+    // Check token limits
+    const estTokens = Math.max(1, Math.ceil(text.length / 4));
     if (!tokenManager.canUse(estTokens)) {
       setLimitOpen(true);
       setState('idle');
+      isProcessingRef.current = false;
       return;
     }
+
+    // Call AI
     tokenManager.consume(estTokens);
     setLoading(true);
-    aiComplete(text).then((reply) => {
-      setAssistantReply(reply);
-      setTranscript((prev) => [...prev, `(Assistant): ${reply}`]);
-      setState('responding');
-      return speak(reply);
-    }).finally(() => setLoading(false)).finally(() => setState('idle'));
+    
+    aiComplete(text)
+      .then((reply) => {
+        if (!reply || reply.includes('failed')) {
+          throw new Error(reply || 'AI request failed');
+        }
+        setAssistantReply(reply);
+        setTranscript((prev) => [...prev, `Assistant: ${reply}`]);
+        setState('responding');
+        return speak(reply);
+      })
+      .catch((error) => {
+        console.error('AI or speech error:', error);
+        const errorMsg = 'Sorry, I encountered an error processing your request.';
+        setAssistantReply(errorMsg);
+        setTranscript((prev) => [...prev, `Assistant: ${errorMsg}`]);
+        showToast({
+          variant: 'error',
+          title: 'Error',
+          description: typeof error === 'string' ? error : 'Failed to get AI response.'
+        });
+        setState('idle');
+      })
+      .finally(() => {
+        setLoading(false);
+        setState('idle');
+        isProcessingRef.current = false;
+      });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
@@ -136,14 +291,37 @@ export const Voice = (): JSX.Element => {
           </div>
 
           <div className="flex-1 backdrop-blur-xl bg-card border border-border rounded-[20px] md:rounded-[28px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col items-center justify-center p-6 md:p-12">
+            {/* Permission Warning */}
+            {micPermission === 'denied' && (
+              <div className="mb-6 p-4 bg-destructive/10 border border-destructive rounded-xl flex items-start gap-3 max-w-2xl">
+                <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-destructive font-semibold mb-1">Microphone Access Required</h3>
+                  <p className="text-sm text-destructive/80">
+                    Please enable microphone permissions in your browser settings to use the voice assistant.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="relative mb-12">
               <div
                 className={`w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shadow-[0_0_60px_rgba(251,146,60,0.6)] transition-all duration-300 ${
-                  state === 'listening' ? "scale-110 animate-pulse" : "scale-100"
+                  state === 'listening' ? "scale-110 animate-pulse" : 
+                  state === 'processing' ? "scale-105" :
+                  state === 'responding' ? "scale-105 animate-pulse" :
+                  state === 'error' ? "scale-95 from-red-400 to-red-500" :
+                  "scale-100"
                 }`}
               >
                 {state === 'listening' ? (
                   <Activity className="w-16 h-16 md:w-20 md:h-20 text-white animate-pulse" />
+                ) : state === 'processing' ? (
+                  <Loader2 className="w-16 h-16 md:w-20 md:h-20 text-white animate-spin" />
+                ) : state === 'responding' ? (
+                  <Volume2 className="w-16 h-16 md:w-20 md:h-20 text-white animate-pulse" />
+                ) : state === 'error' ? (
+                  <AlertCircle className="w-16 h-16 md:w-20 md:h-20 text-white" />
                 ) : (
                   <Mic className="w-16 h-16 md:w-20 md:h-20 text-white" />
                 )}
@@ -152,20 +330,42 @@ export const Voice = (): JSX.Element => {
               {state === 'listening' && (
                 <div className="absolute inset-0 rounded-full border-4 border-orange-400 animate-ping opacity-75" />
               )}
+              {state === 'responding' && (
+                <div className="absolute inset-0 rounded-full border-4 border-purple-400 animate-ping opacity-75" />
+              )}
+            </div>
+
+            {/* State indicator text */}
+            <div className="mb-4 text-center">
+              <p className="text-sm font-medium text-muted-foreground">
+                {state === 'idle' && 'Ready to listen'}
+                {state === 'listening' && 'Listening... Speak now'}
+                {state === 'processing' && 'Processing your request...'}
+                {state === 'responding' && 'Speaking response...'}
+                {state === 'error' && 'Error - Please try again'}
+              </p>
             </div>
 
             <button
               onClick={handleToggleRecording}
-              className={`px-8 md:px-12 py-4 rounded-full font-semibold text-base md:text-lg flex items-center gap-3 shadow-lg transition-all duration-300 hover:scale-105 mb-8 ${
-                state !== 'idle'
+              disabled={state === 'processing' || state === 'responding' || micPermission === 'denied'}
+              className={`px-8 md:px-12 py-4 rounded-full font-semibold text-base md:text-lg flex items-center gap-3 shadow-lg transition-all duration-300 hover:scale-105 mb-8 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 ${
+                state === 'listening'
                   ? "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white"
+                  : state === 'error'
+                  ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white"
                   : "bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white"
               }`}
             >
-              {state !== 'idle' ? (
+              {state === 'listening' ? (
                 <>
                   <Square className="w-5 h-5" />
                   {t('stopRecording')}
+                </>
+              ) : state === 'processing' || state === 'responding' ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  {state === 'processing' ? 'Processing...' : 'Speaking...'}
                 </>
               ) : (
                 <>
@@ -174,6 +374,13 @@ export const Voice = (): JSX.Element => {
                 </>
               )}
             </button>
+
+            {/* Error message display */}
+            {errorMessage && state === 'error' && (
+              <div className="mb-6 p-4 bg-destructive/10 border border-destructive rounded-xl max-w-2xl">
+                <p className="text-sm text-destructive">{errorMessage}</p>
+              </div>
+            )}
 
             {transcript.length > 0 && (
               <div className="w-full max-w-2xl backdrop-blur-xl bg-muted border border-border rounded-2xl p-4 md:p-6">
@@ -184,26 +391,46 @@ export const Voice = (): JSX.Element => {
                 <div className="space-y-3">
                   {recognizedText && (
                     <div className="rounded-lg bg-secondary border border-border overflow-hidden">
-                      <div className="px-3 pt-3 text-xs uppercase tracking-wide text-muted-foreground">{t('recognized')}</div>
-                      <pre className="whitespace-pre-wrap break-words text-xs md:text-sm leading-relaxed p-3 text-foreground font-mono max-h-[40vh] overflow-auto">{recognizedText}</pre>
-                      <div className="px-3 pb-3">
-                        <div className="mt-2 h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                          <div className={`h-full bg-gradient-to-r from-orange-400 to-orange-500 ${state === 'listening' ? 'animate-pulse' : ''}`} style={{width: '60%'}} />
-                        </div>
+                      <div className="px-3 pt-3 flex items-center justify-between">
+                        <span className="text-xs uppercase tracking-wide text-muted-foreground">{t('recognized')}</span>
+                        {state === 'listening' && (
+                          <span className="flex items-center gap-1 text-xs text-orange-500">
+                            <Activity className="w-3 h-3 animate-pulse" />
+                            Listening
+                          </span>
+                        )}
                       </div>
+                      <pre className="whitespace-pre-wrap break-words text-xs md:text-sm leading-relaxed p-3 text-foreground font-mono max-h-[40vh] overflow-auto">{recognizedText}</pre>
+                      {state === 'listening' && (
+                        <div className="px-3 pb-3">
+                          <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-orange-400 to-orange-500 animate-pulse" style={{width: '100%'}} />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                   {assistantReply && (
                     <div className="rounded-lg bg-secondary border border-border overflow-hidden">
-                      <div className="px-3 pt-3 text-xs uppercase tracking-wide text-muted-foreground">{t('assistant')}</div>
-                      <pre className="whitespace-pre-wrap break-words text-xs md:text-sm leading-relaxed p-3 text-foreground font-mono max-h-[40vh] overflow-auto">{assistantReply}</pre>
-                      <div className="px-3 pb-3">
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className="inline-block w-2 h-2 rounded-full bg-purple-400 animate-bounce [animation-delay:0ms]" />
-                          <span className="inline-block w-2 h-2 rounded-full bg-purple-400 animate-bounce [animation-delay:150ms]" />
-                          <span className="inline-block w-2 h-2 rounded-full bg-purple-400 animate-bounce [animation-delay:300ms]" />
-                        </div>
+                      <div className="px-3 pt-3 flex items-center justify-between">
+                        <span className="text-xs uppercase tracking-wide text-muted-foreground">{t('assistant')}</span>
+                        {state === 'responding' && (
+                          <span className="flex items-center gap-1 text-xs text-purple-500">
+                            <Volume2 className="w-3 h-3 animate-pulse" />
+                            Speaking
+                          </span>
+                        )}
                       </div>
+                      <pre className="whitespace-pre-wrap break-words text-xs md:text-sm leading-relaxed p-3 text-foreground font-mono max-h-[40vh] overflow-auto">{assistantReply}</pre>
+                      {state === 'responding' && (
+                        <div className="px-3 pb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-block w-2 h-2 rounded-full bg-purple-400 animate-bounce [animation-delay:0ms]" />
+                            <span className="inline-block w-2 h-2 rounded-full bg-purple-400 animate-bounce [animation-delay:150ms]" />
+                            <span className="inline-block w-2 h-2 rounded-full bg-purple-400 animate-bounce [animation-delay:300ms]" />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                   {transcript.map((text, index) => (
