@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navbar } from "../../components/Navbar";
-import { Send, Sparkles, User, Bot, Trash2, Plus, MessageSquare, Clock, X } from "lucide-react";
+import { Send, Sparkles, User, Bot, Trash2, Plus, MessageSquare, Clock, X, Mic, Square } from "lucide-react";
 import { conversationManager, tokenManager, settingsManager } from "../../lib/historyManager";
 import { Modal } from "../../components/Modal";
 import { useGlobalLoading } from "../../components/LoadingProvider";
 import { tryHandleCommand } from "../../lib/commands";
 import { t, useI18n } from "../../lib/i18n";
 import { useToast } from "../../components/ToastProvider";
+import { aiComplete, hasAIKey } from "../../lib/ai";
+import { useASR, startListening, stopListening, speak, stopSpeaking, type ASRState, isASRAvailable } from "../../lib/speech";
 
 interface Message {
   id: string;
@@ -47,6 +49,12 @@ export const Chat = (): JSX.Element => {
   const [hideUsage, setHideUsage] = useState<boolean>(settingsManager.get().hideTokenUsage ?? false);
   const { showToast } = useToast();
 
+  // Voice state
+  const rec = useASR();
+  const [voiceState, setVoiceState] = useState<ASRState>('idle');
+  const aiAbortRef = useRef<AbortController | null>(null);
+  const aiTimerRef = useRef<number | null>(null);
+
   useEffect(() => {
     const updateUsage = () => {
       const u = tokenManager.getUsage();
@@ -76,55 +84,90 @@ export const Chat = (): JSX.Element => {
     }
   }, [messages, activeConversationId]);
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
+  // Unified send method used by text and voice paths. Returns AI response or null if blocked.
+  const sendMessage = async (text: string): Promise<string | null> => {
+    const trimmed = text.trim();
+    if (!trimmed) return null;
 
     const newMessage: Message = {
       id: Date.now().toString(),
-      text: inputValue,
+      text: trimmed,
       sender: "user",
       timestamp: new Date(),
     };
-
-    setMessages([...messages, newMessage]);
-    setInputValue("");
+    setMessages((prev) => [...prev, newMessage]);
 
     // Immediately try local commands (no token usage)
-    const text = newMessage.text.trim();
-    const cmd = tryHandleCommand(text);
+    const cmd = tryHandleCommand(trimmed);
     if (cmd.handled) {
+      const aiText = cmd.aiResponse || "";
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: cmd.aiResponse || "",
+        text: aiText,
         sender: "ai",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiResponse]);
-      return;
+      return aiText;
     }
 
-    // Fallback response (Gemini) with token gating
-    const estTokens = Math.max(1, Math.ceil(newMessage.text.length / 4));
+    // Token gating
+    const estTokens = Math.max(1, Math.ceil(trimmed.length / 4));
     if (!tokenManager.canUse(estTokens)) {
       setLimitOpen(true);
-      return;
+      return null;
     }
-  tokenManager.consume(estTokens);
-  // refresh usage text quickly
-  const u = tokenManager.getUsage();
-  const limit = tokenManager.getDailyLimit();
-  setUsageText(`${u.used}/${Number.isFinite(limit) ? limit : '∞'} tokens`);
+    tokenManager.consume(estTokens);
+    // refresh usage text quickly
+    const u = tokenManager.getUsage();
+    const limit = tokenManager.getDailyLimit();
+    setUsageText(`${u.used}/${Number.isFinite(limit) ? limit : '∞'} tokens`);
+
+  const hasApiKey = hasAIKey();
     setLoading(true);
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-  text: t('demoAiResponse'),
-        sender: "ai",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiResponse]);
+    try {
+      if (hasApiKey) {
+        const controller = new AbortController();
+        aiAbortRef.current = controller;
+        const aiText = await aiComplete(trimmed, controller.signal);
+        const aiResponse: Message = {
+          id: (Date.now() + 2).toString(),
+          text: aiText,
+          sender: "ai",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, aiResponse]);
+        return aiText;
+      } else {
+        // Demo fallback
+        const result = await new Promise<string>((resolve) => {
+          const tid = window.setTimeout(() => resolve(t('demoAiResponse')), 800);
+          aiTimerRef.current = tid;
+        });
+        const aiResponse: Message = {
+          id: (Date.now() + 2).toString(),
+          text: result,
+          sender: "ai",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, aiResponse]);
+        return result;
+      }
+    } finally {
+      aiAbortRef.current = null;
+      if (aiTimerRef.current) {
+        window.clearTimeout(aiTimerRef.current);
+        aiTimerRef.current = null;
+      }
       setLoading(false);
-    }, 800);
+    }
+  };
+
+  const handleSend = async () => {
+    if (!inputValue.trim()) return;
+    const text = inputValue;
+    setInputValue("");
+    await sendMessage(text);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -164,6 +207,65 @@ export const Chat = (): JSX.Element => {
   };
 
   const activeConv = conversations.find(c => c.id === activeConversationId);
+
+  // Voice: handle mic start/stop and transitions
+  const handleStartVoice = async () => {
+    if (!isASRAvailable()) {
+      showToast({ variant: 'info', title: t('voice'), description: 'Speech recognition is not supported in this browser.' });
+      return;
+    }
+    try {
+      rec.resetTranscript();
+      await startListening();
+      setVoiceState('listening');
+    } catch (e) {
+      showToast({ variant: 'error', title: t('voice'), description: (e as any)?.message || 'Could not start microphone.' });
+    }
+  };
+
+  const handleStopAll = () => {
+    try { stopListening(); } catch {}
+    try { stopSpeaking(); } catch {}
+    if (aiAbortRef.current) {
+      try { aiAbortRef.current.abort(); } catch {}
+      aiAbortRef.current = null;
+    }
+    if (aiTimerRef.current) {
+      window.clearTimeout(aiTimerRef.current);
+      aiTimerRef.current = null;
+    }
+    setLoading(false);
+    setVoiceState('idle');
+    try { rec.resetTranscript(); } catch {}
+  };
+
+  // When listening stops naturally, treat transcript as the message to send
+  useEffect(() => {
+    if (!rec.listening && voiceState === 'listening') {
+      const finalText = (rec as any).finalTranscript || rec.transcript || '';
+      // Move to processing phase if we have something
+      if (finalText.trim()) {
+        setVoiceState('processing');
+        // Send the message, then speak the response
+        (async () => {
+          const aiText = await sendMessage(finalText);
+          // Stop listening before speaking to avoid feedback loops
+          try { stopListening(); } catch {}
+          if (aiText && aiText.trim()) {
+            setVoiceState('responding');
+            try { await speak(aiText); } catch {}
+          }
+          setVoiceState('idle');
+          try { rec.resetTranscript(); } catch {}
+        })();
+      } else {
+        // Nothing captured, just reset
+        setVoiceState('idle');
+        try { rec.resetTranscript(); } catch {}
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rec.listening]);
 
   return (
     <div className="bg-background w-full min-h-screen flex flex-col">
@@ -284,7 +386,7 @@ export const Chat = (): JSX.Element => {
             </div>
 
             <div className="p-3 sm:p-4 md:p-6 border-t border-border">
-              <div className="flex gap-2 sm:gap-3">
+              <div className="flex gap-2 sm:gap-3 items-center">
                 <input
                   type="text"
                   value={inputValue}
@@ -293,6 +395,23 @@ export const Chat = (): JSX.Element => {
                   placeholder={t('chatPlaceholder')}
                   className="flex-1 bg-input text-foreground rounded-full px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 outline-none border border-border focus:border-primary transition-colors text-sm md:text-base"
                 />
+                {voiceState === 'idle' ? (
+                  <button
+                    onClick={handleStartVoice}
+                    title={t('voice')}
+                    className="bg-[#1e2139] hover:bg-[#252844] text-white w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border border-border transition-all hover:scale-105 flex-shrink-0"
+                  >
+                    <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-purple-300" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleStopAll}
+                    title={'Stop'}
+                    className="bg-red-500/20 hover:bg-red-500/30 text-red-200 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border border-red-400/40 transition-all hover:scale-105 flex-shrink-0"
+                  >
+                    <Square className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                )}
                 <button
                   onClick={handleSend}
                   className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105 flex-shrink-0"
@@ -300,6 +419,36 @@ export const Chat = (): JSX.Element => {
                   <Send className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
+              {voiceState !== 'idle' && (
+                <div className="mt-2 text-xs text-muted-foreground flex items-center gap-3">
+                  {voiceState === 'listening' && (
+                    <>
+                      <span className="inline-flex h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                      <span className="flex items-end gap-0.5">
+                        <span className="block w-1 h-3 bg-green-400/80 rounded-sm animate-[ping_1s_ease-in-out_infinite]" style={{ animationDelay: '0ms' }} />
+                        <span className="block w-1 h-4 bg-green-400/80 rounded-sm animate-[ping_1s_ease-in-out_infinite]" style={{ animationDelay: '150ms' }} />
+                        <span className="block w-1 h-5 bg-green-400/80 rounded-sm animate-[ping_1s_ease-in-out_infinite]" style={{ animationDelay: '300ms' }} />
+                        <span className="block w-1 h-4 bg-green-400/80 rounded-sm animate-[ping_1s_ease-in-out_infinite]" style={{ animationDelay: '450ms' }} />
+                        <span className="block w-1 h-3 bg-green-400/80 rounded-sm animate-[ping_1s_ease-in-out_infinite]" style={{ animationDelay: '600ms' }} />
+                      </span>
+                      <span>{'Listening...'}</span>
+                      <span className="text-foreground/80 truncate max-w-[60%]">{rec.transcript}</span>
+                    </>
+                  )}
+                  {voiceState === 'processing' && (
+                    <>
+                      <span className="inline-flex h-2 w-2 rounded-full bg-yellow-400 animate-pulse" />
+                      <span>{'Processing...'}</span>
+                    </>
+                  )}
+                  {voiceState === 'responding' && (
+                    <>
+                      <span className="inline-flex h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
+                      <span>{'Speaking...'}</span>
+                    </>
+                  )}
+                </div>
+              )}
               {!hideUsage && (
                 <div className="mt-2 text-xs text-muted-foreground">{usageText}</div>
               )}

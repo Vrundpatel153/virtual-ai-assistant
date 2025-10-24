@@ -1,12 +1,25 @@
 import { Navbar } from "../../components/Navbar";
-import { User, Mail, Calendar, MapPin, Award, TrendingUp, MessageSquare, Mic } from "lucide-react";
-import { authService } from "../../lib/auth";
+import { User as UserIcon, Mail, Calendar, Award, TrendingUp, MessageSquare, Mic, Save, Lock, KeyRound, Edit3 } from "lucide-react";
+import { authService, User } from "../../lib/auth";
 import { Card, CardContent } from "../../components/ui/card";
 import { t, useI18n } from "../../lib/i18n";
+import { useEffect, useState } from "react";
+import { Modal } from "../../components/Modal";
+import { useToast } from "../../components/ToastProvider";
 
 export const Profile = (): JSX.Element => {
   useI18n();
-  const user = authService.getCurrentUser();
+  const [user, setUser] = useState<User | null>(authService.getCurrentUser());
+  const [editOpen, setEditOpen] = useState(false);
+  const [nameInput, setNameInput] = useState(user?.name || "");
+  const [currentPw, setCurrentPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    setUser(authService.getCurrentUser());
+  }, [editOpen]);
   const stats = [
     { label: t('statsTotalChats'), value: "247", icon: <MessageSquare className="w-5 h-5" />, color: "text-purple-400" },
     { label: t('statsVoiceSessions'), value: "89", icon: <Mic className="w-5 h-5" />, color: "text-orange-400" },
@@ -22,6 +35,7 @@ export const Profile = (): JSX.Element => {
   ];
 
   return (
+    <>
     <div className="bg-background w-full min-h-screen flex flex-col">
       <Navbar />
       <div className="flex-1 pt-16 sm:pt-20 md:pt-24 pb-4 sm:pb-6 px-3 sm:px-4 md:px-6">
@@ -30,7 +44,7 @@ export const Profile = (): JSX.Element => {
             <CardContent className="p-4 sm:p-6 md:p-8">
               <div className="flex flex-col md:flex-row items-center md:items-start gap-4 sm:gap-6">
                 <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center shadow-lg shadow-purple-500/50 flex-shrink-0">
-                  <User className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-white" />
+                  <UserIcon className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 text-white" />
                 </div>
 
                 <div className="flex-1 text-center md:text-left min-w-0">
@@ -46,15 +60,11 @@ export const Profile = (): JSX.Element => {
                       <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400 flex-shrink-0" />
                       <span className="truncate">{t('joinedMarch2024')}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground justify-center md:justify-start sm:col-span-2 md:col-span-1">
-                      <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400 flex-shrink-0" />
-                      <span className="truncate">San Francisco, CA</span>
-                    </div>
                   </div>
                 </div>
 
-                <button className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-full font-semibold text-sm shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105 flex-shrink-0">
-                  {t('editProfile')}
+                <button onClick={() => { setEditOpen(true); setNameInput(user?.name || ""); setCurrentPw(""); setNewPw(""); setConfirmPw(""); }} className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-full font-semibold text-sm shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105 flex-shrink-0 inline-flex items-center gap-2">
+                  <Edit3 className="w-4 h-4" /> {t('editProfile')}
                 </button>
               </div>
             </CardContent>
@@ -101,6 +111,75 @@ export const Profile = (): JSX.Element => {
           </Card>
         </div>
       </div>
-    </div>
+  </div>
+
+  {/* Edit Profile Modal */}
+    <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} title="Edit Profile" size="md">
+      <div className="space-y-6">
+        {/* Name section */}
+        <div>
+          <h3 className="text-foreground font-semibold mb-2 flex items-center gap-2"><UserIcon className="w-4 h-4 text-purple-400"/> Display name</h3>
+          <div className="flex gap-2">
+            <input value={nameInput} onChange={(e)=>setNameInput(e.target.value)} placeholder="Your name" className="flex-1 bg-input text-foreground rounded-xl px-4 py-3 outline-none border border-border focus:border-primary transition-colors text-sm" />
+            <button
+              onClick={() => {
+                const res = authService.updateName(nameInput);
+                if (!res.success) {
+                  showToast({ variant: 'error', title: 'Profile', description: res.error || 'Failed to update name' });
+                  return;
+                }
+                setUser(authService.getCurrentUser());
+                showToast({ variant: 'success', title: 'Profile', description: 'Name updated' });
+              }}
+              className="px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 text-white text-sm font-semibold inline-flex items-center gap-2"
+            >
+              <Save className="w-4 h-4"/> Save
+            </button>
+          </div>
+        </div>
+
+        {/* Password section */}
+        <div>
+          <h3 className="text-foreground font-semibold mb-2 flex items-center gap-2"><Lock className="w-4 h-4 text-purple-400"/> Change password</h3>
+          {user?.loginMethod === 'email' ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input type="password" value={currentPw} onChange={(e)=>setCurrentPw(e.target.value)} placeholder="Current password" className="bg-input text-foreground rounded-xl px-4 py-3 outline-none border border-border focus:border-primary transition-colors text-sm" />
+                <input type="password" value={newPw} onChange={(e)=>setNewPw(e.target.value)} placeholder="New password" className="bg-input text-foreground rounded-xl px-4 py-3 outline-none border border-border focus:border-primary transition-colors text-sm" />
+                <input type="password" value={confirmPw} onChange={(e)=>setConfirmPw(e.target.value)} placeholder="Confirm new password" className="bg-input text-foreground rounded-xl px-4 py-3 outline-none border border-border focus:border-primary transition-colors text-sm" />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    if (newPw !== confirmPw) {
+                      showToast({ variant: 'error', title: 'Profile', description: 'Passwords do not match' });
+                      return;
+                    }
+                    const res = authService.changePassword(currentPw, newPw);
+                    if (!res.success) {
+                      showToast({ variant: 'error', title: 'Profile', description: res.error || 'Failed to change password' });
+                      return;
+                    }
+                    setCurrentPw(''); setNewPw(''); setConfirmPw('');
+                    showToast({ variant: 'success', title: 'Profile', description: 'Password updated' });
+                  }}
+                  className="px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 text-white text-sm font-semibold inline-flex items-center gap-2"
+                >
+                  <KeyRound className="w-4 h-4"/> Update password
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">Password must be at least 6 characters.</p>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">This account is signed in with Google. Password changes are not available.</div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button onClick={()=>setEditOpen(false)} className="px-4 py-2 rounded-xl border border-border text-sm">Close</button>
+        </div>
+      </div>
+    </Modal>
+    </>
   );
 };

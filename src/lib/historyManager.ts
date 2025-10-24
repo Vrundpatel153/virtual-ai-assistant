@@ -130,7 +130,13 @@ export const tokenManager = {
   },
   getDailyLimit(): number {
     const s = settingsManager.get();
-    if (s.apiKey && s.apiKey.trim()) return Number.POSITIVE_INFINITY; // user key bypasses local cap
+    // If a key is configured either in Settings or via env, bypass local cap
+    if (s.apiKey && s.apiKey.trim()) return Number.POSITIVE_INFINITY;
+    try {
+      // @ts-ignore Vite env var for Gemini
+      const envKey = (import.meta?.env?.VITE_GEMINI_API_KEY as string | undefined)?.trim();
+      if (envKey) return Number.POSITIVE_INFINITY;
+    } catch {}
     const plan = s.plan || 'free';
     if (plan === 'premium') return 50000;
     if (plan === 'pro') return 5000;

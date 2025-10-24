@@ -44,7 +44,7 @@ export const Notifications = (): JSX.Element => {
                 <span className="hidden sm:inline">{t('markAllRead')}</span>
                 <span className="sm:hidden">Read</span>
               </button>
-              <button onClick={() => { notificationsManager.clear(); setItems([]); }} className="flex-1 sm:flex-none bg-destructive/10 hover:bg-destructive/20 text-destructive px-3 sm:px-4 py-2 rounded-xl border border-destructive/30 transition-all duration-300 flex items-center justify-center gap-2 text-sm">
+              <button onClick={() => { notificationsManager.clear(); remindersManager.clear(); emailService.clear(); setItems([]); setReminders([]); setOutbox([]); }} className="flex-1 sm:flex-none bg-destructive/10 hover:bg-destructive/20 text-destructive px-3 sm:px-4 py-2 rounded-xl border border-destructive/30 transition-all duration-300 flex items-center justify-center gap-2 text-sm">
                 <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">{t('clear')}</span>
                 <span className="sm:hidden">Clear</span>
@@ -61,7 +61,16 @@ export const Notifications = (): JSX.Element => {
                     <Bell className="w-5 h-5 text-yellow-400" />
                     <h2 className="text-card-foreground font-semibold">{t('allNotifications')}</h2>
                   </div>
-                  <span className="text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground">{t('unreadCount').replace('{count}', String(unread))}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground">{t('unreadCount').replace('{count}', String(unread))}</span>
+                    <button
+                      onClick={() => { notificationsManager.clear(); setItems([]); }}
+                      className="text-xs px-2 py-1 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/30 inline-flex items-center gap-1"
+                      title="Clear notifications"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> {t('clear')}
+                    </button>
+                  </div>
                 </div>
                 <div className="max-h-[70vh] overflow-y-auto p-3 space-y-3">
                   {items.length === 0 ? (
@@ -102,9 +111,18 @@ export const Notifications = (): JSX.Element => {
             <div className="space-y-6">
               <Card className="backdrop-blur-xl bg-card border border-border rounded-[20px] overflow-hidden">
                 <CardContent className="p-0">
-                  <div className="p-4 border-b border-border flex items-center gap-2">
-                    <CalendarClock className="w-5 h-5 text-yellow-400" />
-                    <h2 className="text-card-foreground font-semibold">{t('reminders')}</h2>
+                  <div className="p-4 border-b border-border flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CalendarClock className="w-5 h-5 text-yellow-400" />
+                      <h2 className="text-card-foreground font-semibold">{t('reminders')}</h2>
+                    </div>
+                    <button
+                      onClick={() => { remindersManager.clear(); setReminders([]); }}
+                      className="text-xs px-2 py-1 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/30 inline-flex items-center gap-1"
+                      title="Clear reminders"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> {t('clear')}
+                    </button>
                   </div>
                   <div className="max-h-[34vh] overflow-y-auto p-3 space-y-3">
                     {reminders.length === 0 ? (
@@ -132,9 +150,18 @@ export const Notifications = (): JSX.Element => {
 
               <Card className="backdrop-blur-xl bg-card border border-border rounded-[20px] overflow-hidden">
                 <CardContent className="p-0">
-                  <div className="p-4 border-b border-border flex items-center gap-2">
-                    <Mail className="w-5 h-5 text-blue-400" />
-                    <h2 className="text-card-foreground font-semibold">{t('outbox')}</h2>
+                  <div className="p-4 border-b border-border flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-5 h-5 text-blue-400" />
+                      <h2 className="text-card-foreground font-semibold">{t('outbox')}</h2>
+                    </div>
+                    <button
+                      onClick={() => { emailService.clear(); setOutbox([]); }}
+                      className="text-xs px-2 py-1 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/30 inline-flex items-center gap-1"
+                      title="Clear emails"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> {t('clear')}
+                    </button>
                   </div>
                   <div className="max-h-[34vh] overflow-y-auto p-3 space-y-3">
                     {outbox.length === 0 ? (

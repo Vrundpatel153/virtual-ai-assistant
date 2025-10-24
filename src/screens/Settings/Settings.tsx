@@ -4,7 +4,7 @@ import { Settings as SettingsIcon, Bell, Lock, Globe, Palette, Zap, KeyRound, Ga
 import { Card, CardContent } from "../../components/ui/card";
 import { Switch } from "../../components/ui/switch";
 import { useEffect, useRef, useState } from "react";
-import { settingsManager, tokenManager } from "../../lib/historyManager";
+import { settingsManager, tokenManager, remindersManager } from "../../lib/historyManager";
 import { useGlobalLoading } from "../../components/LoadingProvider";
 import { t, useI18n } from "../../lib/i18n";
 import { useToast } from "../../components/ToastProvider";
@@ -135,6 +135,17 @@ export const Settings = (): JSX.Element => {
             <Switch checked={reminderEmail} onCheckedChange={setReminderEmail} />
           </div>
           <p className="text-xs text-gray-400">{t('onlyRemindersNote')}</p>
+          <div className="pt-2">
+            <button
+              onClick={() => {
+                remindersManager.clear();
+                showToast({ variant: 'success', title: 'Reminders', description: 'All reminder history cleared.' });
+              }}
+              className="text-red-300 hover:text-red-200 text-sm font-semibold"
+            >
+              Clear reminder history
+            </button>
+          </div>
         </div>
       ),
     },

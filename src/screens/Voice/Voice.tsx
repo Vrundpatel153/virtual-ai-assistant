@@ -25,8 +25,9 @@ export const Voice = (): JSX.Element => {
   const [micPermission, setMicPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
   const asr = useASR();
   const { showToast } = useToast();
-  const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const processingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isProcessingRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   // Check microphone permission on mount
   useEffect(() => {
@@ -59,8 +60,28 @@ export const Voice = (): JSX.Element => {
       }
       stopListening();
       stopSpeaking();
+      if (abortRef.current) {
+        try { abortRef.current.abort(); } catch {}
+      }
     };
   }, []);
+
+  const handleStopAll = useCallback(() => {
+    if (processingTimeoutRef.current) {
+      clearTimeout(processingTimeoutRef.current);
+    }
+    try { stopListening(); } catch {}
+    try { stopSpeaking(); } catch {}
+    if (abortRef.current) {
+      try { abortRef.current.abort(); } catch {}
+      abortRef.current = null;
+    }
+    try { asr.resetTranscript(); } catch {}
+    setRecognizedText("");
+    setAssistantReply("");
+    isProcessingRef.current = false;
+    setState('idle');
+  }, [asr]);
 
   const handleToggleRecording = useCallback(async () => {
     if (state === 'idle') {
@@ -128,15 +149,9 @@ export const Voice = (): JSX.Element => {
       }
     } else {
       // Manual stop
-      if (processingTimeoutRef.current) {
-        clearTimeout(processingTimeoutRef.current);
-      }
-      stopListening();
-      stopSpeaking();
-      isProcessingRef.current = false;
-      setState('idle');
+      handleStopAll();
     }
-  }, [state, showToast]);
+  }, [state, showToast, handleStopAll]);
 
   // Update recognized text as user speaks (interim results)
   useEffect(() => {
@@ -156,7 +171,7 @@ export const Voice = (): JSX.Element => {
 
   // Process the recognized text when entering processing state
   useEffect(() => {
-    if (state !== 'processing' || isProcessingRef.current) return;
+  if (state !== 'processing' || isProcessingRef.current) return;
     
     isProcessingRef.current = true;
     const text = (asr.transcript || recognizedText || '').trim();
@@ -185,6 +200,8 @@ export const Voice = (): JSX.Element => {
       setAssistantReply(cmd.aiResponse);
       setTranscript((prev) => [...prev, `Assistant: ${cmd.aiResponse}`]);
       setState('responding');
+      // Ensure we are not listening while speaking to avoid feedback loops
+      try { stopListening(); } catch {}
       speak(cmd.aiResponse)
         .catch((error) => {
           console.error('Speech synthesis error:', error);
@@ -208,6 +225,7 @@ export const Voice = (): JSX.Element => {
       setAssistantReply(reply);
       setTranscript((prev) => [...prev, `Assistant: ${reply}`]);
       setState('responding');
+      try { stopListening(); } catch {}
       speak(reply)
         .catch((error) => console.error('Speech error:', error))
         .finally(() => {
@@ -230,7 +248,9 @@ export const Voice = (): JSX.Element => {
     tokenManager.consume(estTokens);
     setLoading(true);
     
-    aiComplete(text)
+    // Prepare abort controller for cancellable AI call
+    abortRef.current = new AbortController();
+    aiComplete(text, abortRef.current.signal)
       .then((reply) => {
         if (!reply || reply.includes('failed')) {
           throw new Error(reply || 'AI request failed');
@@ -238,6 +258,8 @@ export const Voice = (): JSX.Element => {
         setAssistantReply(reply);
         setTranscript((prev) => [...prev, `Assistant: ${reply}`]);
         setState('responding');
+        // Stop listening before speaking to avoid re-capturing our own TTS output
+        try { stopListening(); } catch {}
         return speak(reply);
       })
       .catch((error) => {
@@ -254,6 +276,7 @@ export const Voice = (): JSX.Element => {
       })
       .finally(() => {
         setLoading(false);
+        abortRef.current = null;
         setState('idle');
         isProcessingRef.current = false;
       });
@@ -348,7 +371,7 @@ export const Voice = (): JSX.Element => {
 
             <button
               onClick={handleToggleRecording}
-              disabled={state === 'processing' || state === 'responding' || micPermission === 'denied'}
+              disabled={micPermission === 'denied'}
               className={`px-8 md:px-12 py-4 rounded-full font-semibold text-base md:text-lg flex items-center gap-3 shadow-lg transition-all duration-300 hover:scale-105 mb-8 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 ${
                 state === 'listening'
                   ? "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white"
@@ -374,6 +397,15 @@ export const Voice = (): JSX.Element => {
                 </>
               )}
             </button>
+
+            {state !== 'idle' && (
+              <button
+                onClick={handleStopAll}
+                className="px-5 py-3 rounded-full font-semibold text-sm flex items-center gap-2 border border-red-500/40 text-red-300 hover:text-red-200 hover:bg-red-500/10 transition-colors mb-8"
+              >
+                <Square className="w-4 h-4" /> Stop
+              </button>
+            )}
 
             {/* Error message display */}
             {errorMessage && state === 'error' && (

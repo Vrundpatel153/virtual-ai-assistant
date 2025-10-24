@@ -116,5 +116,50 @@ export const authService = {
   getAllUsers(): any[] {
     const usersStr = localStorage.getItem(USERS_KEY);
     return usersStr ? JSON.parse(usersStr) : [];
+  },
+
+  // Update display name for the current user
+  updateName(newName: string): { success: boolean; error?: string } {
+    const user = this.getCurrentUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+    const name = (newName || '').trim();
+    if (!name) return { success: false, error: 'Name cannot be empty' };
+
+    // Update current session user
+    const updated = { ...user, name } as User;
+    localStorage.setItem(AUTH_KEY, JSON.stringify(updated));
+
+    // Also update persisted users storage if this is an email user
+    if (user.loginMethod === 'email') {
+      const users = this.getAllUsers();
+      const idx = users.findIndex((u: any) => u.email === user.email);
+      if (idx !== -1) {
+        users[idx].name = name;
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      }
+    }
+    return { success: true };
+  },
+
+  // Change password for the current user (email logins only)
+  changePassword(currentPassword: string, newPassword: string): { success: boolean; error?: string } {
+    const user = this.getCurrentUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+    if (user.loginMethod !== 'email') return { success: false, error: 'Password cannot be changed for Google accounts' };
+
+    const cur = (currentPassword || '').trim();
+    const next = (newPassword || '').trim();
+    if (!cur || !next) return { success: false, error: 'Please fill all password fields' };
+    if (next.length < 6) return { success: false, error: 'New password must be at least 6 characters' };
+    if (cur === next) return { success: false, error: 'New password must be different from current password' };
+
+    const users = this.getAllUsers();
+    const idx = users.findIndex((u: any) => u.email === user.email);
+    if (idx === -1) return { success: false, error: 'User record not found' };
+    if (users[idx].password !== cur) return { success: false, error: 'Current password is incorrect' };
+
+    users[idx].password = next;
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    return { success: true };
   }
 };

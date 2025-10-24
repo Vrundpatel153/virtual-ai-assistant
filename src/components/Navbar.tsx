@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { MessageSquare, Mic, Wrench, Menu, X, Settings, LogOut, Chrome as Home, Bell, CreditCard } from "lucide-react";
+import { MessageSquare, Wrench, Menu, X, Settings, LogOut, Chrome as Home, Bell, CreditCard } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { authService } from "../lib/auth";
 import { metricsManager, notificationsManager, remindersManager } from "../lib/historyManager";
@@ -65,14 +65,12 @@ export const Navbar = (): JSX.Element => {
   const navLinks = currentUser ? [
     { icon: <Home className="w-4 h-4" />, label: t('home'), path: "/" },
     { icon: <MessageSquare className="w-4 h-4" />, label: t('chat'), path: "/chat" },
-    { icon: <Mic className="w-4 h-4" />, label: t('voice'), path: "/voice" },
     { icon: <Wrench className="w-4 h-4" />, label: t('aiTools'), path: "/ai-tools" },
     { icon: <Bell className="w-4 h-4" />, label: t('notifications'), path: "/notifications" },
     { icon: <CreditCard className="w-4 h-4" />, label: t('pricing'), path: "/pricing" },
   ] : [
     { icon: <Home className="w-4 h-4" />, label: t('home'), path: "/" },
     { icon: <MessageSquare className="w-4 h-4" />, label: t('chat'), path: "/chat" },
-    { icon: <Mic className="w-4 h-4" />, label: t('voice'), path: "/voice" },
     { icon: <Wrench className="w-4 h-4" />, label: t('aiTools'), path: "/ai-tools" },
     { icon: <CreditCard className="w-4 h-4" />, label: t('pricing'), path: "/pricing" },
   ];

@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Landing } from "./screens/Landing/Landing";
 import { Template } from "./screens/Template/Template";
 import { Chat } from "./screens/Chat/Chat";
-import { Voice } from "./screens/Voice/Voice";
 import { AITools } from "./screens/AITools/AITools";
 import { Settings } from "./screens/Settings/Settings";
 import { Profile } from "./screens/Profile/Profile";
@@ -27,8 +26,7 @@ createRoot(document.getElementById("app") as HTMLElement).render(
       <Routes>
         <Route path="/" element={<Landing />} />
     <Route path="/home" element={<Template />} />
-    <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-    <Route path="/voice" element={<ProtectedRoute><Voice /></ProtectedRoute>} />
+  <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
   <Route path="/ai-tools" element={<ProtectedRoute><AITools /></ProtectedRoute>} />
   <Route path="/settings" element={<Settings />} />
     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
