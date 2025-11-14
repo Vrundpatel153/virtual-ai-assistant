@@ -7,7 +7,7 @@ import { useGlobalLoading } from "../../components/LoadingProvider";
 import { tryHandleCommand } from "../../lib/commands";
 import { t, useI18n } from "../../lib/i18n";
 import { useToast } from "../../components/ToastProvider";
-import { aiComplete, hasAIKey } from "../../lib/ai";
+import { aiComplete } from "../../lib/ai";
 import { useASR, startListening, stopListening, speak, stopSpeaking, type ASRState, isASRAvailable } from "../../lib/speech";
 
 interface Message {
@@ -115,7 +115,15 @@ export const Chat = (): JSX.Element => {
     const estTokens = Math.max(1, Math.ceil(trimmed.length / 4));
     if (!tokenManager.canUse(estTokens)) {
       setLimitOpen(true);
-      return null;
+      const msg = t('dailyTokenLimitMessage');
+      const aiResponse: Message = {
+        id: (Date.now() + 2).toString(),
+        text: msg,
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, aiResponse]);
+      return msg;
     }
     tokenManager.consume(estTokens);
     // refresh usage text quickly
@@ -123,36 +131,25 @@ export const Chat = (): JSX.Element => {
     const limit = tokenManager.getDailyLimit();
     setUsageText(`${u.used}/${Number.isFinite(limit) ? limit : '∞'} tokens`);
 
-  const hasApiKey = hasAIKey();
     setLoading(true);
     try {
-      if (hasApiKey) {
-        const controller = new AbortController();
-        aiAbortRef.current = controller;
-        const aiText = await aiComplete(trimmed, controller.signal);
-        const aiResponse: Message = {
-          id: (Date.now() + 2).toString(),
-          text: aiText,
-          sender: "ai",
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, aiResponse]);
-        return aiText;
-      } else {
-        // Demo fallback
-        const result = await new Promise<string>((resolve) => {
-          const tid = window.setTimeout(() => resolve(t('demoAiResponse')), 800);
-          aiTimerRef.current = tid;
-        });
-        const aiResponse: Message = {
-          id: (Date.now() + 2).toString(),
-          text: result,
-          sender: "ai",
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, aiResponse]);
-        return result;
+      const controller = new AbortController();
+      aiAbortRef.current = controller;
+      let aiText: string = "";
+      try {
+        aiText = await aiComplete(trimmed, controller.signal);
+      } catch (err: any) {
+        aiText = `AI request failed: ${err?.message || 'unknown error'}`;
       }
+
+      const aiResponse: Message = {
+        id: (Date.now() + 2).toString(),
+        text: aiText,
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, aiResponse]);
+      return aiText;
     } finally {
       aiAbortRef.current = null;
       if (aiTimerRef.current) {
@@ -460,7 +457,14 @@ export const Chat = (): JSX.Element => {
         <div className="space-y-3">
           <p className="text-gray-300 text-sm">{t('dailyTokenLimitMessage')}</p>
           <div className="flex gap-2 pt-2">
-            <a href="/settings" className="flex-1 text-center bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-semibold">{t('addApiKey')}</a>
+            <a
+              href="https://console.groq.com/docs/quickstart"
+              target="_blank"
+              rel="noreferrer"
+              className="flex-1 text-center bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-semibold"
+            >
+              {t('configureEnvKey')}
+            </a>
             <a href="/pricing" className="flex-1 text-center bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-2 rounded-lg font-semibold">{t('viewPricing')}</a>
           </div>
         </div>

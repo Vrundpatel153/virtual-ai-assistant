@@ -1,76 +1,66 @@
-import { settingsManager } from './historyManager';
+const DEFAULT_API_BASE = 'http://localhost:3000';
 
-// Preferred model and env var for Gemini
-const DEFAULT_GEMINI_MODEL = 'gemini-1.5-flash';
-
-function getEnvGeminiKey(): string | undefined {
+function getBackendBase(): string {
   try {
-    // Vite-style env variable
-    // @ts-ignore
-    const k = import.meta?.env?.VITE_GEMINI_API_KEY as string | undefined;
-    return k?.trim() || undefined;
-  } catch {
-    return undefined;
-  }
+    // @ts-ignore allow Vite env override
+    const override = import.meta?.env?.VITE_API_BASE_URL as string | undefined;
+    if (override && override.trim()) return override.trim();
+  } catch {}
+  return DEFAULT_API_BASE;
 }
 
-export function hasAIKey(): boolean {
-  const s = settingsManager.get();
-  return Boolean(s.apiKey?.trim() || getEnvGeminiKey());
+function getChatUrl(): string {
+  const base = getBackendBase().replace(/\/$/, '');
+  return `${base}/chat`;
 }
 
-// Allow passing an AbortSignal to support cancellation of in-flight AI requests
-export async function aiComplete(prompt: string, signal?: AbortSignal): Promise<string> {
-  const s = settingsManager.get();
-  const key = s.apiKey?.trim() || getEnvGeminiKey();
-  if (!key) {
-    // No key, return a clear message but keep it minimal
-    return 'No API key configured. Please add one in Settings or set VITE_GEMINI_API_KEY.';
-  }
-
+export async function callChatEndpoint(
+  body: Record<string, unknown>,
+  signal?: AbortSignal
+): Promise<{ reply?: string; error?: string }> {
+  const endpoint = getChatUrl();
   try {
-    // Google Generative Language API with Search grounding enabled
-    const url = `https://generativelanguage.googleapis.com/v1/models/${DEFAULT_GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`;
-    const body = {
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }],
-        },
-      ],
-      tools: [
-        // Attempt to use Google Search grounding when available
-        { google_search: {} },
-      ],
-      generationConfig: {
-        temperature: 0.4,
-      },
-      safetySettings: [
-        // keep defaults; rely on server-side policy
-      ],
-    } as any;
-
-    const res = await fetch(url, {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
       signal,
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const error = data?.error || 'AI request failed.';
+      const err = new Error(error);
+      (err as any).status = res.status;
+      throw err;
+    }
+    return data;
+  } catch (error: any) {
+    if (error?.name === 'AbortError') throw error;
+    try { if ((import.meta as any)?.env?.DEV) console.warn('[AI] backend error', error); } catch {}
+    throw new Error(error?.message || 'AI request failed: Network error.');
+  }
+}
 
-    // Extract text from candidates
-    const candidates = data?.candidates || [];
-    let text = '';
-    if (candidates.length > 0) {
-      const parts = candidates[0]?.content?.parts || [];
-      text = parts.map((p: any) => p?.text || '').join('\n').trim();
-    }
-    return text || 'I do not have a response.';
-  } catch (e: any) {
-    if (e?.name === 'AbortError') {
-      return 'AI request cancelled';
-    }
-    return `AI request failed: ${e?.message || 'unknown error'}`;
+// Allow passing an AbortSignal to support cancellation of in-flight AI requests
+export async function aiComplete(
+  prompt: string,
+  signal?: AbortSignal,
+  options?: { mode?: 'chat' | 'intent'; assistantName?: string; userName?: string }
+): Promise<string> {
+  try {
+    const data = await callChatEndpoint(
+      {
+        message: prompt,
+        mode: options?.mode,
+        assistantName: options?.assistantName,
+        userName: options?.userName,
+      },
+      signal
+    );
+    const reply = (data?.reply || '').trim();
+    return reply || 'I do not have a response.';
+  } catch (error: any) {
+    if (error?.name === 'AbortError') return 'AI request cancelled';
+    return error?.message || 'AI request failed.';
   }
 }

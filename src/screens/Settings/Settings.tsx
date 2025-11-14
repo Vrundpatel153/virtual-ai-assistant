@@ -1,6 +1,6 @@
 import { Navbar } from "../../components/Navbar";
 import { ThemeToggle } from "../../components/ThemeToggle";
-import { Settings as SettingsIcon, Bell, Lock, Globe, Palette, Zap, KeyRound, Gauge, CreditCard } from "lucide-react";
+import { Settings as SettingsIcon, Bell, Lock, Globe, Palette, Zap, Gauge, CreditCard } from "lucide-react";
 import { Card, CardContent } from "../../components/ui/card";
 import { Switch } from "../../components/ui/switch";
 import { useEffect, useRef, useState } from "react";
@@ -14,7 +14,6 @@ export const Settings = (): JSX.Element => {
   const { setLoading } = useGlobalLoading();
   const [reminderInApp, setReminderInApp] = useState(true);
   const [reminderEmail, setReminderEmail] = useState(false);
-  const [apiKey, setApiKey] = useState("");
   const [plan, setPlan] = useState<'free'|'pro'|'premium'>('free');
   const [reduceLoad, setReduceLoad] = useState(false);
   const [language, setLanguage] = useState<'en'|'hi'>('en');
@@ -25,7 +24,6 @@ export const Settings = (): JSX.Element => {
   const [baseline, setBaseline] = useState<null | {
     reminderInApp: boolean;
     reminderEmail: boolean;
-    apiKey: string;
     plan: 'free'|'pro'|'premium';
     reduceLoad: boolean;
     language: 'en'|'hi';
@@ -37,7 +35,6 @@ export const Settings = (): JSX.Element => {
     const s = settingsManager.get();
     setReminderInApp(!!s.reminderInApp);
     setReminderEmail(!!s.reminderEmail);
-    setApiKey(s.apiKey || "");
     setPlan((s.plan as any) || 'free');
     setReduceLoad(!!s.reduceLoad);
     setLanguage((s.language as any) || 'en');
@@ -46,7 +43,6 @@ export const Settings = (): JSX.Element => {
     setBaseline({
       reminderInApp: !!s.reminderInApp,
       reminderEmail: !!s.reminderEmail,
-      apiKey: s.apiKey || "",
       plan: ((s.plan as any) || 'free'),
       reduceLoad: !!s.reduceLoad,
       language: ((s.language as any) || 'en'),
@@ -57,19 +53,18 @@ export const Settings = (): JSX.Element => {
 
   const saveSettings = () => {
     setLoading(true);
-  settingsManager.update({ reminderInApp, reminderEmail, apiKey: apiKey.trim(), plan, reduceLoad, language, hideTokenUsage, customCursor });
+  settingsManager.update({ reminderInApp, reminderEmail, plan, reduceLoad, language, hideTokenUsage, customCursor });
     tokenManager.reset();
     setTimeout(()=>{
       setLoading(false);
       showToast({ variant: 'success', title: t('settings'), description: t('settingsSaved') });
-      setBaseline({ reminderInApp, reminderEmail, apiKey: apiKey.trim(), plan, reduceLoad, language, hideTokenUsage, customCursor });
+      setBaseline({ reminderInApp, reminderEmail, plan, reduceLoad, language, hideTokenUsage, customCursor });
     }, 500);
   };
 
   const isDirty = baseline ? (
     baseline.reminderInApp !== reminderInApp ||
     baseline.reminderEmail !== reminderEmail ||
-    (baseline.apiKey || "") !== (apiKey || "") ||
     baseline.plan !== plan ||
     baseline.reduceLoad !== reduceLoad ||
     baseline.language !== language ||
@@ -81,7 +76,6 @@ export const Settings = (): JSX.Element => {
     if (!baseline) return;
     setReminderInApp(baseline.reminderInApp);
     setReminderEmail(baseline.reminderEmail);
-    setApiKey(baseline.apiKey);
     setPlan(baseline.plan);
     setReduceLoad(baseline.reduceLoad);
     setLanguage(baseline.language);
@@ -146,24 +140,6 @@ export const Settings = (): JSX.Element => {
               Clear reminder history
             </button>
           </div>
-        </div>
-      ),
-    },
-    {
-      icon: <KeyRound className="w-5 h-5 text-white" />,
-      title: t('apiKeyTitle'),
-      description: t('apiKeyDesc'),
-      color: "from-emerald-600 to-emerald-700",
-      component: (
-        <div className="space-y-3">
-          <input
-            type="password"
-            placeholder={t('pasteApiKey')}
-            value={apiKey}
-            onChange={(e)=>setApiKey(e.target.value)}
-            className="w-full bg-[#2a2d4a] text-white rounded-lg px-4 py-2 outline-none border border-white/10 focus:border-purple-500"
-          />
-          <p className="text-xs text-gray-400">{t('localKeyNote')}</p>
         </div>
       ),
     },

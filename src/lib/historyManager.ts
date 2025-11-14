@@ -73,7 +73,6 @@ const TOKENS_KEY = 'ai_tokens';
 export interface AppSettings {
   reminderInApp: boolean; // in-app notifications for reminders
   reminderEmail: boolean; // email notifications for reminders
-  apiKey?: string; // optional user API key to bypass internal limits
   plan?: 'free' | 'pro' | 'premium'; // pricing plan
   reduceLoad?: boolean; // if true, disable heavy visuals like 3D model
   language?: 'en' | 'hi'; // English or Hindi
@@ -130,12 +129,11 @@ export const tokenManager = {
   },
   getDailyLimit(): number {
     const s = settingsManager.get();
-    // If a key is configured either in Settings or via env, bypass local cap
-    if (s.apiKey && s.apiKey.trim()) return Number.POSITIVE_INFINITY;
+    // If a backend proxy is configured via env, bypass local cap
     try {
-      // @ts-ignore Vite env var for Gemini
-      const envKey = (import.meta?.env?.VITE_GEMINI_API_KEY as string | undefined)?.trim();
-      if (envKey) return Number.POSITIVE_INFINITY;
+      // @ts-ignore Vite env var for backend base URL
+      const apiBase = (import.meta?.env?.VITE_API_BASE_URL as string | undefined)?.trim();
+      if (apiBase) return Number.POSITIVE_INFINITY;
     } catch {}
     const plan = s.plan || 'free';
     if (plan === 'premium') return 50000;

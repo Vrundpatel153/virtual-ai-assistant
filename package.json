@@ -8,13 +8,18 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "node server/index.js"
   },
   "dependencies": {
     "@react-three/drei": "^9.97.0",
     "@react-three/fiber": "^8.16.0",
     "@types/node": "^24.7.2",
     "clsx": "2.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "groq-sdk": "^0.35.0",
     "lovable-tagger": "^1.1.10",
     "lucide-react": "^0.453.0",
     "maath": "^0.10.8",
@@ -28,6 +33,7 @@
     "three": "^0.161.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@types/react": "18.2.0",
     "@types/react-dom": "18.2.0",
     "@vitejs/plugin-react": "4.3.4",

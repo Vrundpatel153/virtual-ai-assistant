@@ -1,58 +1,61 @@
 # Virtual AI Assistant
 
-Production-ready React + TypeScript + Tailwind + Vite project with Chat and voice I/O, PDF summarizer, reminders, notifications, and profile management.
+Production-ready React + TypeScript + Tailwind + Vite project with chat and voice I/O, PDF summarizer, reminders, notifications, and profile management.
 
 ## Getting started
 
-> **Prerequisites:**
-> The following steps require [NodeJS](https://nodejs.org/en/) to be installed on your system, so please
-> install it beforehand if you haven't already.
+> **Prerequisites:** Install [Node.js](https://nodejs.org/en/) before running the commands below.
 
-To get started with your project, you'll first need to install the dependencies with:
+Install dependencies:
 
 ```
 npm install
 ```
 
-Then, you'll be able to run a development version of the project with:
+Start the dev server (frontend):
 
 ```
 npm run dev
 ```
 
-After a few seconds, your project should be accessible at the address
-[http://localhost:5173/](http://localhost:5173/)
+The app will be available at [http://localhost:5173/](http://localhost:5173/).
 
+Start the Express backend in a second terminal so chat/voice requests can proxy through Groq securely:
 
-If you are satisfied with the result, you can finally build the project for release with:
+```
+npm run server
+```
+
+The backend listens on [http://localhost:3000](http://localhost:3000) by default.
+
+When you're ready to produce an optimized build:
 
 ```
 npm run build
+```
 
 ## Environment variables
 
-The app can use either a key saved in Settings (in-app) or a Gemini key from your environment. If any key is present, token limits are bypassed and all AI calls use Gemini with web grounding when available.
-
-1) Quick temporary setup (Windows PowerShell):
+Create a `.env` file in `virtual-ai-assistant/` that contains at least:
 
 ```
-$env:VITE_GEMINI_API_KEY = "your_key_here"
-npm run dev
+GROQ_API_KEY=sk_your_actual_key
+# Optional: override the frontend proxy URL
+# VITE_API_BASE_URL=http://localhost:3000
 ```
 
-2) Recommended for local dev: copy `.env.example` to `.env` and fill in your key:
+- `GROQ_API_KEY` is read by the Express backend via `dotenv`. Keep it private and never prefix it with `VITE_`.
+- `VITE_API_BASE_URL` allows the frontend to call a different proxy URL (defaults to `http://localhost:3000`).
+
+Example (PowerShell) for a temporary session:
 
 ```
-cp .env.example .env
-# then edit .env and add your key
+$env:GROQ_API_KEY = "sk_your_actual_key"
+npm run server
 ```
-
-Notes:
-- This is a client app; VITE_* env vars are exposed to the browser. For production, proxy AI calls through a backend to keep secrets server-side.
-- You can also paste an API key in Settings; the app will prefer the Settings key if present.
 
 ## Voice in Chat
 
-- Click the mic to start; waveform shows while listening. Auto-stops on silence, posts your question, then reads the AI answer aloud.
-- Stop button cancels listening, speaking, and in-flight AI requests cleanly.
-```
+- Click the mic to start recording; the waveform animates while listening and auto-stops on silence.
+- The assistant posts the transcription, fetches a Groq response, and reads it back with speech synthesis.
+- Use the stop button to cancel listening, speaking, and any in-flight Groq request immediately.

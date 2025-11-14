@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Navbar } from "../../components/Navbar";
 import { Mic, Square, Volume2, Activity, Clock, Trash2, History, AlertCircle, Loader2 } from "lucide-react";
-import { voiceHistoryManager, tokenManager, settingsManager } from "../../lib/historyManager";
+import { voiceHistoryManager, tokenManager } from "../../lib/historyManager";
 import { useGlobalLoading } from "../../components/LoadingProvider";
 import { Modal } from "../../components/Modal";
 import { tryHandleMultiCommand } from "../../lib/commands";
@@ -211,23 +211,6 @@ export const Voice = (): JSX.Element => {
             description: 'Could not speak the response.'
           });
         })
-        .finally(() => {
-          setState('idle');
-          isProcessingRef.current = false;
-        });
-      return;
-    }
-
-    // Check for API key
-    const hasKey = (settingsManager.get().apiKey || '').trim().length > 0;
-    if (!hasKey) {
-      const reply = 'AI features require an API key. Please add one in Settings, or I can only run local commands.';
-      setAssistantReply(reply);
-      setTranscript((prev) => [...prev, `Assistant: ${reply}`]);
-      setState('responding');
-      try { stopListening(); } catch {}
-      speak(reply)
-        .catch((error) => console.error('Speech error:', error))
         .finally(() => {
           setState('idle');
           isProcessingRef.current = false;
@@ -522,7 +505,14 @@ export const Voice = (): JSX.Element => {
         <div className="space-y-3">
           <p className="text-gray-300 text-sm">{t('dailyTokenLimitMessage')}</p>
           <div className="flex gap-2 pt-2">
-            <a href="/settings" className="flex-1 text-center bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-semibold">{t('addApiKey')}</a>
+            <a
+              href="https://console.groq.com/docs/quickstart"
+              target="_blank"
+              rel="noreferrer"
+              className="flex-1 text-center bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-semibold"
+            >
+              {t('configureEnvKey')}
+            </a>
             <a href="/pricing" className="flex-1 text-center bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-2 rounded-lg font-semibold">{t('viewPricing')}</a>
           </div>
         </div>
