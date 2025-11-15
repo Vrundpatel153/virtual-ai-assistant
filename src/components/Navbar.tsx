@@ -6,6 +6,7 @@ import { authService } from "../lib/auth";
 import { metricsManager, notificationsManager, remindersManager } from "../lib/historyManager";
 import { t, useI18n } from "../lib/i18n";
 import AuthModal from "./AuthModal";
+import { AppLogo } from "./AppLogo";
 
 export const Navbar = (): JSX.Element => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -91,12 +92,12 @@ export const Navbar = (): JSX.Element => {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
         <div className="flex items-center justify-between h-14 sm:h-16 md:h-20 perspective-800">
           <div onClick={() => navigate("/")} className="flex items-center gap-2 sm:gap-3 cursor-pointer group lift-3d">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#a855f7] flex items-center justify-center shadow-lg shadow-purple-500/30 relative overflow-hidden group-hover:scale-105 transition-transform">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <Wrench className="w-4 h-4 sm:w-5 sm:h-5 text-white relative z-10" />
+            <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex items-center justify-center transition-transform group-hover:scale-105">
+              <AppLogo className="w-full h-full drop-shadow-[0_10px_25px_rgba(124,58,237,0.55)]" />
             </div>
             <div className="transition-transform">
               <h1 className="text-white font-bold text-sm sm:text-base md:text-lg lg:text-xl leading-tight">{t('appName')}</h1>
+              <p className="text-[10px] sm:text-xs text-white/60">{t('chatTagline')}</p>
             </div>
           </div>
 

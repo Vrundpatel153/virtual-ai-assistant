@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { settingsManager } from './historyManager';
 
-// Minimal i18n dictionary (English/Hindi) for key UI strings
 const dict = {
   en: {
     appName: 'AI Assistant',

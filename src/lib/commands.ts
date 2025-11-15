@@ -33,6 +33,27 @@ const SERVICE_URLS: Record<string, string> = {
   wikipedia: "https://www.wikipedia.org",
 };
 
+type SearchEngineKey = "google" | "youtube";
+
+const SEARCH_ENGINES: Record<SearchEngineKey, { label: string; buildUrl: (query: string) => string }> = {
+  google: {
+    label: "Google",
+    buildUrl: (query: string) => `https://www.google.com/search?q=${encodeURIComponent(query)}`,
+  },
+  youtube: {
+    label: "YouTube",
+    buildUrl: (query: string) => `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
+  },
+};
+
+const SEARCH_ENGINE_ALIASES: Record<string, SearchEngineKey> = {
+  google: "google",
+  goog: "google",
+  g: "google",
+  youtube: "youtube",
+  yt: "youtube",
+};
+
 function toUrl(targetRaw: string): string | null {
   let target = targetRaw.trim();
   // drop leading 'the '
@@ -61,93 +82,168 @@ function openTarget(target: string): string {
   return "I couldn't determine the URL to open.";
 }
 
-function parseTimePhraseToDate(timePhrase: string): Date | null {
-  let now = new Date();
-  const phrase = timePhrase.trim().toLowerCase();
+function resolveSearchEngine(raw: string | undefined | null): SearchEngineKey | null {
+  if (!raw) return null;
+  const key = raw.toLowerCase().replace(/[^a-z]/g, "");
+  return SEARCH_ENGINE_ALIASES[key] || null;
+}
 
-  // in N minutes/hours
-  let m = phrase.match(/in\s+(\d+)\s*(minute|minutes|min|hour|hours|hr|hrs)/);
-  if (m) {
-    const n = parseInt(m[1], 10);
-    const unit = m[2];
-    const delta = /hour|hr/.test(unit) ? n * 60 : n;
-    return new Date(now.getTime() + delta * 60 * 1000);
+function openSearch(engine: SearchEngineKey, query: string): string {
+  const trimmed = query.trim();
+  if (!trimmed) {
+    return `Please tell me what to search on ${SEARCH_ENGINES[engine].label}.`;
+  }
+  const url = SEARCH_ENGINES[engine].buildUrl(trimmed);
+  try { window.open(url, "_blank", "noopener,noreferrer"); } catch {}
+  return `Searching "${trimmed}" on ${SEARCH_ENGINES[engine].label}.`;
+}
+
+function parseTimePhraseToDate(timePhrase: string): Date | null {
+  const now = new Date();
+  const raw = timePhrase.trim();
+  if (!raw) return null;
+  const phrase = raw.toLowerCase();
+
+  const setClockTime = (target: Date, clockRaw: string): boolean => {
+    const cleaned = clockRaw.replace(/^at\s+/, '').trim();
+    const match = cleaned.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+    if (!match) return false;
+    let h = parseInt(match[1], 10);
+    const min = match[2] ? parseInt(match[2], 10) : 0;
+    const ampm = match[3]?.toLowerCase();
+    if (ampm) {
+      if (ampm === 'pm' && h < 12) h += 12;
+      if (ampm === 'am' && h === 12) h = 0;
+    }
+    if (!ampm && h === 24) h = 0;
+    if (h > 23 || min > 59) return false;
+    target.setHours(h, min, 0, 0);
+    return true;
+  };
+
+  const addMinutes = (mins: number) => new Date(now.getTime() + mins * 60 * 1000);
+
+  const relativeFew = phrase.match(/(?:in|after)\s+(?:a\s+few|few|some)\s+(minute|minutes|min|hour|hours|hr|hrs)/);
+  if (relativeFew) {
+    const unit = relativeFew[1];
+    const minutes = /hour|hr/.test(unit) ? 120 : 5;
+    return addMinutes(minutes);
   }
 
-  // HH[:MM] [am|pm]
-  m = phrase.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/);
-  if (m) {
-    let h = parseInt(m[1], 10);
-    let min = m[2] ? parseInt(m[2], 10) : 0;
-    const ampm = m[3];
-    if (ampm) {
-      if (ampm === "pm" && h < 12) h += 12;
-      if (ampm === "am" && h === 12) h = 0;
+  const relative = phrase.match(/(?:in|after)\s+(\d+)\s*(minute|minutes|min|hour|hours|hr|hrs|day|days)/);
+  if (relative) {
+    const amount = parseInt(relative[1], 10);
+    const unit = relative[2];
+    let minutes = amount;
+    if (/hour|hr/.test(unit)) minutes = amount * 60;
+    if (/day/.test(unit)) minutes = amount * 60 * 24;
+    return addMinutes(minutes);
+  }
+
+  const tomorrow = phrase.match(/^tomorrow(?:\s+at\s+(.+))?$/);
+  if (tomorrow) {
+    const dt = new Date(now);
+    dt.setDate(dt.getDate() + 1);
+    dt.setSeconds(0, 0);
+    const timePart = tomorrow[1];
+    if (timePart) {
+      if (!setClockTime(dt, timePart)) return null;
+    } else {
+      dt.setHours(now.getHours(), now.getMinutes(), 0, 0);
     }
+    return dt;
+  }
+
+  const today = phrase.match(/^today(?:\s+at\s+(.+))?$/);
+  if (today) {
     const dt = new Date(now);
     dt.setSeconds(0, 0);
-    dt.setHours(h, min, 0, 0);
-    // if time already passed today, assume tomorrow
+    const timePart = today[1];
+    if (timePart) {
+      if (!setClockTime(dt, timePart)) return null;
+      if (dt.getTime() <= now.getTime()) {
+        dt.setDate(dt.getDate() + 1);
+      }
+    }
+    return dt;
+  }
+
+  let m = phrase.replace(/^at\s+/, '').match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/);
+  if (m) {
+    const dt = new Date(now);
+    dt.setSeconds(0, 0);
+    if (!setClockTime(dt, m[0])) return null;
     if (dt.getTime() <= now.getTime()) {
       dt.setDate(dt.getDate() + 1);
     }
     return dt;
   }
 
-  // ISO-like date/time fallback
-  const dt = new Date(timePhrase);
+  const dt = new Date(raw);
   if (!isNaN(dt.getTime())) return dt;
   return null;
 }
 
 function tryReminder(text: string): CommandResult | null {
-  // Patterns:
-  // set reminder at <time> for <desc>
-  // set reminder for <desc> at <time>
-  // remind me at <time> to <desc>
-  const patterns: RegExp[] = [
-    /set\s+reminders?\s+at\s+(.+?)\s+for\s+\"([^\"]+)\"/i,
-    /set\s+reminders?\s+at\s+(.+?)\s+for\s+'([^']+)'/i,
-    /set\s+reminders?\s+at\s+(.+?)\s+for\s+(.+)/i,
-    /set\s+reminders?\s+for\s+\"([^\"]+)\"\s+at\s+(.+)/i,
-    /set\s+reminders?\s+for\s+'([^']+)'\s+at\s+(.+)/i,
-    /set\s+reminders?\s+for\s+(.+)\s+at\s+(.+)/i,
-    /remind\s+me\s+at\s+(.+?)\s+to\s+\"([^\"]+)\"/i,
-    /remind\s+me\s+at\s+(.+?)\s+to\s+'([^']+)'/i,
-    /remind\s+me\s+at\s+(.+?)\s+to\s+(.+)/i,
+  type Extracted = { time: string; desc: string };
+  const patterns: Array<{ regex: RegExp; map: (match: RegExpMatchArray) => Extracted }> = [
+    {
+      regex: /remind\s+me\s+in\s+(.+?)\s+(?:to|about|for)\s+(.+)/i,
+      map: (m) => ({ time: m[1], desc: m[2] })
+    },
+    {
+      regex: /set\s+(?:a\s+)?reminders?\s+in\s+(.+?)\s+(?:to|about|for)\s+(.+)/i,
+      map: (m) => ({ time: m[1], desc: m[2] })
+    },
+    {
+      regex: /remind\s+me\s+tomorrow(?:\s+at\s+(.+?))?\s+(?:to|about|for)\s+(.+)/i,
+      map: (m) => ({ time: m[1] ? `tomorrow at ${m[1]}` : 'tomorrow', desc: m[2] })
+    },
+    {
+      regex: /set\s+(?:a\s+)?reminders?\s+for\s+(.+?)\s+(tomorrow|today)(?:\s+at\s+(.+))?/i,
+      map: (m) => ({ desc: m[1], time: m[3] ? `${m[2]} at ${m[3]}` : m[2] })
+    },
+    {
+      regex: /remind\s+me\s+at\s+(.+?)\s+(?:to|about|for)\s+(.+)/i,
+      map: (m) => ({ time: m[1], desc: m[2] })
+    },
+    {
+      regex: /set\s+(?:a\s+)?reminders?\s+at\s+(.+?)\s+(?:for|about)\s+(.+)/i,
+      map: (m) => ({ time: m[1], desc: m[2] })
+    },
+    {
+      regex: /set\s+(?:a\s+)?reminders?\s+for\s+(.+?)\s+at\s+(.+)/i,
+      map: (m) => ({ desc: m[1], time: m[2] })
+    },
+    {
+      regex: /set\s+(?:a\s+)?reminders?\s+for\s+(.+?)\s+in\s+(.+)/i,
+      map: (m) => ({ desc: m[1], time: m[2] })
+    },
+    {
+      regex: /remind\s+me\s+(?:about|of|for)\s+(.+?)\s+in\s+(.+)/i,
+      map: (m) => ({ desc: m[1], time: m[2] })
+    },
   ];
 
-  for (const p of patterns) {
-    const m = text.match(p);
-    if (m) {
-      let timeStr: string, desc: string;
-      if (p.source.includes('at') && p.source.includes('for') && p.source.indexOf('at') < p.source.indexOf('for')) {
-        timeStr = m[1];
-        desc = m[2];
-      } else if (p.source.includes('for') && p.source.includes('at') && p.source.indexOf('for') < p.source.indexOf('at')) {
-        desc = m[1];
-        timeStr = m[2];
-      } else if (p.source.includes('remind') && p.source.includes('at') && p.source.includes('to')) {
-        timeStr = m[1];
-        desc = m[2];
-      } else {
-        // generic capture order fallback
-        desc = m[m.length - 1];
-        timeStr = m[1];
-      }
-
-      const due = parseTimePhraseToDate(timeStr);
+  for (const pattern of patterns) {
+    const match = text.match(pattern.regex);
+    if (match) {
+      const { time, desc } = pattern.map(match);
+      const due = parseTimePhraseToDate(time);
       if (!due) {
-        return { handled: true, aiResponse: `I couldn't understand the time "${timeStr}".` };
+        return { handled: true, aiResponse: `I couldn't understand the time "${time}".` };
+      }
+      const finalDesc = desc.trim();
+      if (!finalDesc) {
+        return { handled: true, aiResponse: 'Please tell me what to remind you about.' };
       }
       const user = authService.getCurrentUser();
-      const item = remindersManager.add({ description: desc.trim(), dueAt: due, email: user?.email });
-      notificationsManager.add({ type: 'reminder', title: 'Reminder created', message: `${desc.trim()} (${due.toLocaleString()})`, relatedId: item.id });
-      return { handled: true, aiResponse: `Reminder set for ${due.toLocaleString()}${user?.email ? ` (email: ${user.email})` : ''}: "${desc.trim()}".` };
+      const item = remindersManager.add({ description: finalDesc, dueAt: due, email: user?.email });
+      notificationsManager.add({ type: 'reminder', title: 'Reminder created', message: `${finalDesc} (${due.toLocaleString()})`, relatedId: item.id });
+      return { handled: true, aiResponse: `Reminder set for ${due.toLocaleString()}${user?.email ? ` (email: ${user.email})` : ''}: "${finalDesc}".` };
     }
   }
 
-  // Fallback: previous simple pattern: set reminder(s) for "desc"
   const mSimple = text.match(/set\s+reminders?\s+for\s+\"([^\"]+)\"/i) || text.match(/set\s+reminders?\s+for\s+'([^']+)'/i) || text.match(/set\s+reminders?\s+for\s+(.+)/i);
   if (mSimple) {
     const desc = (mSimple[1] || '').trim();
@@ -170,6 +266,44 @@ function tryOpen(text: string): CommandResult | null {
     return { handled: true, aiResponse: response };
   }
   return null;
+}
+
+function trySearchCommand(text: string): CommandResult | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  let engine: SearchEngineKey | null = null;
+  let query: string | null = null;
+
+  const searchOn = trimmed.match(/^(?:search|look\s*up)\s+(?:for\s+)?(.+?)\s+(?:on|in|with|using|og)\s+([a-z0-9 .]+)/i);
+  if (searchOn) {
+    engine = resolveSearchEngine(searchOn[2]);
+    query = searchOn[1];
+  }
+
+  if (!engine) {
+    const engineFirst = trimmed.match(/^(?:search|look\s*up)\s+([a-z0-9 .]+)\s+(?:for\s+)?(.+)/i);
+    if (engineFirst) {
+      engine = resolveSearchEngine(engineFirst[1]);
+      if (engine) query = engineFirst[2];
+    }
+  }
+
+  if (!engine) {
+    const openAndSearch = trimmed.match(/^(?:please\s+)?(?:open\s+)?([a-z0-9 .]+)\s+(?:and\s+)?(?:search|look\s*up)\s+(?:for\s+)?(.+?)(?:\s+on\s+it)?$/i);
+    if (openAndSearch) {
+      engine = resolveSearchEngine(openAndSearch[1]);
+      if (engine) query = openAndSearch[2];
+    }
+  }
+
+  if (!engine && /^(?:search|look\s*up)/i.test(trimmed)) {
+    engine = "google";
+    query = trimmed.replace(/^(?:search|look\s*up)\s+(?:for\s+)?/i, "").trim();
+  }
+
+  if (!engine || !query) return null;
+  return { handled: true, aiResponse: openSearch(engine, query) };
 }
 
 // Split utterance into multiple intents using connectors outside quotes
@@ -215,6 +349,8 @@ function splitMultiIntents(input: string): string[] {
 
 export function tryHandleCommand(text: string): CommandResult {
   const t = text.trim();
+  const searchRes = trySearchCommand(t);
+  if (searchRes) return searchRes;
   // Priority: open -> reminder
   const openRes = tryOpen(t);
   if (openRes) return openRes;

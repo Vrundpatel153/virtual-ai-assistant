@@ -3,18 +3,56 @@ import { Navbar } from "../../components/Navbar";
 import { Send, Sparkles, User, Bot, Trash2, Plus, MessageSquare, Clock, X, Mic, Square } from "lucide-react";
 import { conversationManager, tokenManager, settingsManager } from "../../lib/historyManager";
 import { Modal } from "../../components/Modal";
-import { useGlobalLoading } from "../../components/LoadingProvider";
 import { tryHandleCommand } from "../../lib/commands";
 import { t, useI18n } from "../../lib/i18n";
 import { useToast } from "../../components/ToastProvider";
 import { aiComplete } from "../../lib/ai";
-import { useASR, startListening, stopListening, speak, stopSpeaking, type ASRState, isASRAvailable } from "../../lib/speech";
+import { useASR, startListening, stopListening, speak, stopSpeaking, type ASRState, isASRAvailable, type VoiceLocale } from "../../lib/speech";
 
 interface Message {
   id: string;
   text: string;
   sender: "user" | "ai";
   timestamp: Date;
+}
+
+type MessageSegment =
+  | { type: "text"; content: string }
+  | { type: "code"; content: string; language?: string };
+
+const codeFenceRegex = /```([a-zA-Z0-9_-]+)?\s*\n([\s\S]*?)```/g;
+
+function getMessageSegments(raw: string): MessageSegment[] {
+  if (!raw) return [];
+  const segments: MessageSegment[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = codeFenceRegex.exec(raw)) !== null) {
+    const [full, language, code] = match;
+    const matchIndex = match.index;
+    if (matchIndex > lastIndex) {
+      const preceding = raw.slice(lastIndex, matchIndex);
+      if (preceding.trim()) {
+        segments.push({ type: "text", content: preceding.trim() });
+      }
+    }
+    segments.push({ type: "code", content: code.trimEnd(), language: language?.trim() || undefined });
+    lastIndex = matchIndex + full.length;
+  }
+
+  if (lastIndex < raw.length) {
+    const tail = raw.slice(lastIndex);
+    if (tail.trim()) {
+      segments.push({ type: "text", content: tail.trim() });
+    }
+  }
+
+  if (segments.length === 0) {
+    segments.push({ type: "text", content: raw });
+  }
+
+  return segments;
 }
 
 export const Chat = (): JSX.Element => {
@@ -44,7 +82,6 @@ export const Chat = (): JSX.Element => {
   const [inputValue, setInputValue] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const [limitOpen, setLimitOpen] = useState(false);
-  const { setLoading } = useGlobalLoading();
   const [usageText, setUsageText] = useState<string>("");
   const [hideUsage, setHideUsage] = useState<boolean>(settingsManager.get().hideTokenUsage ?? false);
   const { showToast } = useToast();
@@ -131,33 +168,38 @@ export const Chat = (): JSX.Element => {
     const limit = tokenManager.getDailyLimit();
     setUsageText(`${u.used}/${Number.isFinite(limit) ? limit : '∞'} tokens`);
 
-    setLoading(true);
-    try {
-      const controller = new AbortController();
-      aiAbortRef.current = controller;
-      let aiText: string = "";
-      try {
-        aiText = await aiComplete(trimmed, controller.signal);
-      } catch (err: any) {
-        aiText = `AI request failed: ${err?.message || 'unknown error'}`;
-      }
+    const placeholderId = `${Date.now()}-thinking`;
+    const placeholder: Message = {
+      id: placeholderId,
+      text: "Thinking...",
+      sender: "ai",
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, placeholder]);
 
-      const aiResponse: Message = {
-        id: (Date.now() + 2).toString(),
-        text: aiText,
-        sender: "ai",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-      return aiText;
+    const controller = new AbortController();
+    aiAbortRef.current = controller;
+    let aiText = "";
+    try {
+      aiText = await aiComplete(trimmed, controller.signal);
+    } catch (err: any) {
+      aiText = `AI request failed: ${err?.message || 'unknown error'}`;
     } finally {
       aiAbortRef.current = null;
       if (aiTimerRef.current) {
         window.clearTimeout(aiTimerRef.current);
         aiTimerRef.current = null;
       }
-      setLoading(false);
     }
+
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === placeholderId
+          ? { ...msg, text: aiText, timestamp: new Date() }
+          : msg
+      )
+    );
+    return aiText;
   };
 
   const handleSend = async () => {
@@ -206,6 +248,8 @@ export const Chat = (): JSX.Element => {
   const activeConv = conversations.find(c => c.id === activeConversationId);
 
   // Voice: handle mic start/stop and transitions
+  const getPreferredVoiceLocale = (): VoiceLocale => (settingsManager.get().language === 'hi' ? 'hi-IN' : 'en-US');
+
   const handleStartVoice = async () => {
     if (!isASRAvailable()) {
       showToast({ variant: 'info', title: t('voice'), description: 'Speech recognition is not supported in this browser.' });
@@ -213,7 +257,7 @@ export const Chat = (): JSX.Element => {
     }
     try {
       rec.resetTranscript();
-      await startListening();
+      await startListening(getPreferredVoiceLocale());
       setVoiceState('listening');
     } catch (e) {
       showToast({ variant: 'error', title: t('voice'), description: (e as any)?.message || 'Could not start microphone.' });
@@ -231,7 +275,6 @@ export const Chat = (): JSX.Element => {
       window.clearTimeout(aiTimerRef.current);
       aiTimerRef.current = null;
     }
-    setLoading(false);
     setVoiceState('idle');
     try { rec.resetTranscript(); } catch {}
   };
@@ -250,7 +293,7 @@ export const Chat = (): JSX.Element => {
           try { stopListening(); } catch {}
           if (aiText && aiText.trim()) {
             setVoiceState('responding');
-            try { await speak(aiText); } catch {}
+            try { await speak(aiText, { locale: getPreferredVoiceLocale() }); } catch {}
           }
           setVoiceState('idle');
           try { rec.resetTranscript(); } catch {}
@@ -365,13 +408,31 @@ export const Chat = (): JSX.Element => {
                     </div>
                   )}
                   <div
-                    className={`max-w-[85%] sm:max-w-[80%] md:max-w-[75%] rounded-2xl p-0 overflow-hidden ${
+                    className={`max-w-[85%] sm:max-w-[80%] md:max-w-[75%] rounded-2xl p-0 ${
                       message.sender === "user"
                         ? "bg-primary text-primary-foreground"
                         : "bg-secondary text-foreground"
                     }`}
                   >
-                    <pre className="whitespace-pre-wrap break-words text-xs sm:text-sm leading-relaxed p-3 sm:p-4 max-h-[40vh] sm:max-h-[50vh] overflow-auto font-mono">{message.text}</pre>
+                    <div className="space-y-3 p-3 sm:p-4">
+                      {getMessageSegments(message.text).map((segment, index) =>
+                        segment.type === "code" ? (
+                          <pre
+                            key={`${message.id}-code-${index}`}
+                            className="bg-background/80 text-xs sm:text-sm font-mono text-foreground rounded-xl border border-border/60 p-3 overflow-x-auto"
+                          >
+                            <code>{segment.content}</code>
+                          </pre>
+                        ) : (
+                          <p
+                            key={`${message.id}-text-${index}`}
+                            className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words"
+                          >
+                            {segment.content}
+                          </p>
+                        )
+                      )}
+                    </div>
                   </div>
                   {message.sender === "user" && (
                     <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">

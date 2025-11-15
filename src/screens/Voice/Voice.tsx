@@ -1,16 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Navbar } from "../../components/Navbar";
 import { Mic, Square, Volume2, Activity, Clock, Trash2, History, AlertCircle, Loader2 } from "lucide-react";
-import { voiceHistoryManager, tokenManager } from "../../lib/historyManager";
+import { voiceHistoryManager, tokenManager, settingsManager } from "../../lib/historyManager";
 import { useGlobalLoading } from "../../components/LoadingProvider";
 import { Modal } from "../../components/Modal";
 import { tryHandleMultiCommand } from "../../lib/commands";
-import { useASR, isASRAvailable, startListening, stopListening, speak, stopSpeaking } from "../../lib/speech";
+import { useASR, isASRAvailable, startListening, stopListening, speak, stopSpeaking, type VoiceLocale } from "../../lib/speech";
 import { aiComplete } from "../../lib/ai";
 import { t, useI18n } from "../../lib/i18n";
 import { useToast } from "../../components/ToastProvider";
 
 export const Voice = (): JSX.Element => {
+    const getPreferredLocale = (): VoiceLocale => (settingsManager.get().language === 'hi' ? 'hi-IN' : 'en-US');
   type VoiceState = 'idle' | 'listening' | 'processing' | 'responding' | 'error';
   useI18n();
   const [state, setState] = useState<VoiceState>('idle');
@@ -29,7 +30,6 @@ export const Voice = (): JSX.Element => {
   const isProcessingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Check microphone permission on mount
   useEffect(() => {
     const checkMicPermission = async () => {
       try {
@@ -47,12 +47,10 @@ export const Voice = (): JSX.Element => {
     checkMicPermission();
   }, []);
 
-  // Update history when transcript changes
   useEffect(() => {
     setHistory(voiceHistoryManager.getAllRecords());
   }, [transcript]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (processingTimeoutRef.current) {
@@ -85,7 +83,7 @@ export const Voice = (): JSX.Element => {
 
   const handleToggleRecording = useCallback(async () => {
     if (state === 'idle') {
-      // Check browser support
+
       if (!isASRAvailable()) {
         setErrorMessage('Voice recognition is not supported in your browser. Please use Chrome, Edge, or Safari.');
         setState('error');
@@ -97,7 +95,6 @@ export const Voice = (): JSX.Element => {
         return;
       }
 
-      // Request microphone permission
       try {
         await navigator.mediaDevices.getUserMedia({ audio: true });
         setMicPermission('granted');
@@ -113,18 +110,16 @@ export const Voice = (): JSX.Element => {
         return;
       }
 
-      // Clear previous state
       setAssistantReply("");
       setRecognizedText("");
       setErrorMessage("");
       setState('listening');
       
-      const lang = settingsManager.get().language === 'hi' ? 'hi-IN' : 'en-US';
+      const lang = getPreferredLocale();
       
       try {
         await startListening(lang);
         
-        // Set safety timeout in case listening doesn't stop automatically
         if (processingTimeoutRef.current) {
           clearTimeout(processingTimeoutRef.current);
         }
@@ -135,7 +130,7 @@ export const Voice = (): JSX.Element => {
             title: 'Timeout',
             description: 'Listening timed out. Please try again.'
           });
-        }, 30000); // 30 second timeout
+        }, 30000); 
         
       } catch (error) {
         console.error('Error starting recording:', error);
@@ -148,18 +143,16 @@ export const Voice = (): JSX.Element => {
         });
       }
     } else {
-      // Manual stop
+
       handleStopAll();
     }
   }, [state, showToast, handleStopAll]);
 
-  // Update recognized text as user speaks (interim results)
   useEffect(() => {
     if (!asr.transcript) return;
     setRecognizedText(asr.transcript);
   }, [asr.transcript]);
 
-  // Auto-detect end of speech: when ASR stops listening while we are in listening state, move to processing
   useEffect(() => {
     if (state === 'listening' && asr.listening === false && asr.transcript) {
       if (processingTimeoutRef.current) {
@@ -169,7 +162,6 @@ export const Voice = (): JSX.Element => {
     }
   }, [asr.listening, asr.transcript, state]);
 
-  // Process the recognized text when entering processing state
   useEffect(() => {
   if (state !== 'processing' || isProcessingRef.current) return;
     
@@ -187,22 +179,19 @@ export const Voice = (): JSX.Element => {
       return;
     }
 
-    // Add user message to transcript
     setTranscript((prev) => [...prev, `You: ${text}`]);
     voiceHistoryManager.addRecord(text);
     
-    // Reset ASR transcript for next recording
     asr.resetTranscript();
 
-    // Try command handling first
     const cmd = tryHandleMultiCommand(text);
     if (cmd.handled && cmd.aiResponse) {
       setAssistantReply(cmd.aiResponse);
       setTranscript((prev) => [...prev, `Assistant: ${cmd.aiResponse}`]);
       setState('responding');
-      // Ensure we are not listening while speaking to avoid feedback loops
+
       try { stopListening(); } catch {}
-      speak(cmd.aiResponse)
+      speak(cmd.aiResponse, { locale: getPreferredLocale() })
         .catch((error) => {
           console.error('Speech synthesis error:', error);
           showToast({
@@ -218,7 +207,7 @@ export const Voice = (): JSX.Element => {
       return;
     }
 
-    // Check token limits
+   
     const estTokens = Math.max(1, Math.ceil(text.length / 4));
     if (!tokenManager.canUse(estTokens)) {
       setLimitOpen(true);
@@ -231,7 +220,7 @@ export const Voice = (): JSX.Element => {
     tokenManager.consume(estTokens);
     setLoading(true);
     
-    // Prepare abort controller for cancellable AI call
+   
     abortRef.current = new AbortController();
     aiComplete(text, abortRef.current.signal)
       .then((reply) => {
@@ -241,9 +230,9 @@ export const Voice = (): JSX.Element => {
         setAssistantReply(reply);
         setTranscript((prev) => [...prev, `Assistant: ${reply}`]);
         setState('responding');
-        // Stop listening before speaking to avoid re-capturing our own TTS output
+        
         try { stopListening(); } catch {}
-        return speak(reply);
+        return speak(reply, { locale: getPreferredLocale() });
       })
       .catch((error) => {
         console.error('AI or speech error:', error);
