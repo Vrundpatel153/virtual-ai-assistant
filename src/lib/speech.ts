@@ -1,4 +1,5 @@
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import { settingsManager } from './historyManager';
 
 export type ASRState = 'idle' | 'listening' | 'processing' | 'responding';
 
@@ -20,6 +21,7 @@ const synth: ExtendedSpeechSynthesis | null =
     : null;
 
 const HINDI_REGEX = /[\u0900-\u097F]/;
+const ROMANIZED_HINDI_REGEX = /\b(kaise|kya|haan|nahi|nahin|theek|thik|mai|main|hoon|ho|tum|aap|hum|acha|achha|accha|bahut|shukriya|dhanyava?d|namaste|namaskar|pranam|kripya|kripaya|kripaa|krupya|dost|bhai|behen|swaagat|swagat|hello\s*ji|namaste\s*ji)\b/i;
 const URL_REGEX = /(https?:\/\/|www\.)\S+/gi;
 const MARKDOWN_SYMBOLS = /[*_`~>|#{}\[\]()<>]/g;
 const BULLET_CHARS = /[•·▪●]/g;
@@ -98,9 +100,14 @@ const ensureVoicesReady = () => {
   return voicesReadyPromise;
 };
 
-const detectLanguage = (text: string): VoiceLocale => (
-  HINDI_REGEX.test(text) ? 'hi-IN' : 'en-US'
-);
+const detectLanguage = (text: string): VoiceLocale => {
+  if (HINDI_REGEX.test(text) || ROMANIZED_HINDI_REGEX.test(text)) {
+    return 'hi-IN';
+  }
+  const preferred = settingsManager.get().language;
+  if (preferred === 'hi') return 'hi-IN';
+  return 'en-US';
+};
 
 const pickVoice = (lang: VoiceLocale): SpeechSynthesisVoice | undefined => {
   if (!cachedVoices.length) return undefined;
@@ -136,14 +143,21 @@ export async function speak(text: string, options: SpeakOptions = {}): Promise<v
   await ensureVoicesReady();
 
   const payload = options.disableSanitize ? text.trim() : sanitizeTextForSpeech(text) || text.trim();
-  const lang = options.locale ?? detectLanguage(text);
+  let lang = options.locale ?? detectLanguage(text);
   const utterance = new SpeechSynthesisUtterance(payload);
+  let voice = pickVoice(lang);
+
+  if (!voice && lang === 'hi-IN') {
+    // Fallback to English voice if no Hindi voice is available on this device
+    voice = pickVoice('en-US');
+    if (voice?.lang) lang = voice.lang as VoiceLocale;
+  }
+
   utterance.lang = lang;
   const tweak = VOICE_TWEAKS[lang] ?? { rate: 1, pitch: 1 };
   utterance.rate = options.rateOverride ?? tweak.rate;
   utterance.pitch = options.pitchOverride ?? tweak.pitch;
   utterance.volume = 1;
-  const voice = pickVoice(lang);
   if (voice) {
     utterance.voice = voice;
   }

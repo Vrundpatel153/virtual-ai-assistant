@@ -293,7 +293,7 @@ export const Chat = (): JSX.Element => {
           try { stopListening(); } catch {}
           if (aiText && aiText.trim()) {
             setVoiceState('responding');
-            try { await speak(aiText, { locale: getPreferredVoiceLocale() }); } catch {}
+            try { await speak(aiText); } catch {}
           }
           setVoiceState('idle');
           try { rec.resetTranscript(); } catch {}

@@ -191,7 +191,7 @@ export const Voice = (): JSX.Element => {
       setState('responding');
 
       try { stopListening(); } catch {}
-      speak(cmd.aiResponse, { locale: getPreferredLocale() })
+      speak(cmd.aiResponse)
         .catch((error) => {
           console.error('Speech synthesis error:', error);
           showToast({
@@ -232,7 +232,7 @@ export const Voice = (): JSX.Element => {
         setState('responding');
         
         try { stopListening(); } catch {}
-        return speak(reply, { locale: getPreferredLocale() });
+        return speak(reply);
       })
       .catch((error) => {
         console.error('AI or speech error:', error);
