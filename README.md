@@ -18,7 +18,7 @@ Start the dev server (frontend):
 npm run dev
 ```
 
-The app will be available at [http://localhost:5173/](http://localhost:5173/).
+The app will be available at [http://localhost:8080/](http://localhost:8080/).
 
 Start the Express backend in a second terminal so chat/voice requests can proxy through Groq securely:
 
@@ -36,7 +36,7 @@ npm run build
 
 ## Environment variables
 
-Create a `.env` file in `virtual-ai-assistant/` that contains at least:
+Create a `.env` file in `virtual-ai-assistant/` (you can copy from `.env.example`) that contains at least:
 
 ```
 GROQ_API_KEY=sk_your_actual_key
